@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -46,6 +49,10 @@ namespace Mavic
             {
                 var feed = await GatherRedditRssFeed(subreddit);
                 var links = ParseImgurLinksFromFeed(feed);
+
+                var directory = Path.Combine(this._options.OutputDirectory, subreddit);
+
+                if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
             }
         }
 
@@ -77,9 +84,53 @@ namespace Mavic
         /// </summary>
         /// <param name="feed">The xml parsed from the rss feed</param>
         /// <returns></returns>
-        private List<string> ParseImgurLinksFromFeed(XDocument feed)
+        private static IEnumerable<Image> ParseImgurLinksFromFeed(XDocument feed)
         {
-            return new List<string>();
+            var linkNodes = feed.Descendants()
+                .Where(e => e.Attribute("type")?.Value == "html" && e.Value.Contains("imgur"))
+                .ToList();
+
+            var linkPages = new List<Image>();
+
+            var regexFull = new Regex(@"(https?:\/\/imgur.com\/([A-z0-9\-]+))(\?[[^\/]+)?");
+            var regexDirect = new Regex(@"(https?:\/\/i.imgur.com\/([A-z0-9\-]+))(\?[[^\/]+)?");
+
+            foreach (var linkNode in linkNodes)
+            {
+                if (linkNode?.Parent == null) continue;
+
+                var elements = linkNode.Parent.Elements().ToList();
+                var author = elements.First(e => e.Name.LocalName.Equals("author")).Elements().ToList();
+
+                var image = new Image
+                {
+                    Id = elements.First(e => e.Name.LocalName.Equals("id")).Value,
+                    Title = elements.First(e => e.Name.LocalName.Equals("title")).Value,
+                    Category = elements.First(e => e.Name.LocalName.Equals("category")).Attribute("term")?.Value,
+                    PostLink = elements.First(e => e.Name.LocalName.Equals("link")).Attribute("href")?.Value,
+                    Link = string.Empty,
+                    Author = new Author
+                    {
+                        Name = author.First(e => e.Name.LocalName.Equals("name")).Value,
+                        Link = author.First(e => e.Name.LocalName.Equals("uri")).Value
+                    }
+                };
+
+                if (regexFull.IsMatch(linkNode.Value))
+                {
+                    var match = regexFull.Match(linkNode.Value);
+                    image.Link = match.Value;
+                }
+                else if (regexDirect.IsMatch(linkNode.Value))
+                {
+                    var match = regexDirect.Match(linkNode.Value);
+                    image.Link = match.Value;
+                }
+
+                linkPages.Add(image);
+            }
+
+            return linkPages;
         }
     }
 }
