@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -29,15 +30,20 @@ namespace Mavic
             {"hot", "new", "rising", "controversial", "top"};
 
         /// <summary>
+        ///     After is used for paging when the user selects more than 100 items to search for.
+        /// </summary>
+        private int _after;
+
+        /// <summary>
         ///     Creates a new instance of the scraper with the command line options.
         /// </summary>
         /// <param name="options">The command line options</param>
         public Scraper(CommandLineOptions options)
         {
-            _options = options;
+            this._options = options;
 
             // if the limit goes outside the bounds of the upper and lower scopes, reset back to the 50 limit.
-            if (_options.ImageLimit <= 0 || _options.ImageLimit > 500) _options.ImageLimit = 50;
+            if (this._options.ImageLimit <= 0 || this._options.ImageLimit > 500) this._options.ImageLimit = 50;
         }
 
         /// <summary>
@@ -45,14 +51,65 @@ namespace Mavic
         /// </summary>
         public async Task ProcessSubreddits()
         {
-            foreach (var subreddit in _options.Subreddits)
+            foreach (var subreddit in this._options.Subreddits)
             {
-                var feed = await GatherRedditRssFeed(subreddit);
-                var links = ParseImgurLinksFromFeed(feed);
+                this._after = 0;
 
-                var directory = Path.Combine(this._options.OutputDirectory, subreddit);
+                do
+                {
+                    var feed = await this.GatherRedditRssFeed(subreddit);
+                    var links = ParseImgurLinksFromFeed(feed);
 
-                if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+                    var directory = Path.Combine(this._options.OutputDirectory, subreddit);
+
+                    if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+
+                    foreach (var image in links) await DownloadImage(directory, image);
+
+                    this._after += 100;
+                } while (this._after < this._options.ImageLimit && this._options.ImageLimit > 100);
+            }
+        }
+
+        /// <summary>
+        ///     Downloads a given image based on its properties.
+        /// </summary>
+        /// <param name="outputDirectory">The output directory for the image to be stored</param>
+        /// <param name="image">The image being downloaded</param>
+        /// <returns></returns>
+        private static async Task DownloadImage(string outputDirectory, Image image)
+        {
+            var imageImgurId = image.Link.Split("/").Last();
+            var imageFullPath = Path.Combine(outputDirectory, $"{imageImgurId}.png");
+
+            if (File.Exists(imageFullPath)) return;
+
+            using var webClient = new WebClient();
+
+            try
+            {
+                await webClient.DownloadFileTaskAsync(new Uri($"{image.Link}.png"), imageFullPath);
+                // determine the file type and see if we can rename the file to the correct file type.
+                var detector = new FileTypeInterrogator.FileTypeInterrogator();
+                var miniType = detector.DetectType(File.ReadAllBytes(Path.GetFullPath(imageFullPath)));
+
+                if (miniType == null) return;
+
+                var updatedFilePath = Path.Combine(outputDirectory, $"{imageImgurId}.{miniType.FileType}");
+
+                // since the file already exists, delete the old file and move on.
+                if (File.Exists(updatedFilePath))
+                {
+                    File.Delete(imageFullPath);
+                    return;
+                }
+
+                // since we have found a new updated file type, move/rename the file to the new path.
+                File.Move(imageFullPath, updatedFilePath);
+            }
+            catch (Exception e)
+            {
+                // ignored
             }
         }
 
@@ -68,10 +125,10 @@ namespace Mavic
 
             using var httpClient = new HttpClient();
 
-            var url = string.IsNullOrEmpty(_options.PageType) || _options.PageType == "hot" ||
-                      !_supportedPageTypes.Contains(_options.PageType)
-                ? $"https://www.reddit.com/r/{subreddit}/.rss?limit={_options.ImageLimit}&after=0"
-                : $"https://www.reddit.com/r/{subreddit}/{_options.PageType}.rss?limit={_options.ImageLimit}&after=0";
+            var url = string.IsNullOrEmpty(this._options.PageType) || this._options.PageType == "hot" ||
+                      !this._supportedPageTypes.Contains(this._options.PageType)
+                ? $"https://www.reddit.com/r/{subreddit}/.rss?limit={this._options.ImageLimit}&after={this._after}"
+                : $"https://www.reddit.com/r/{subreddit}/{this._options.PageType}.rss?limit={this._options.ImageLimit}&after={this._after}";
 
             var source = await httpClient.GetAsync(url);
             var stringContent = await source.Content.ReadAsStringAsync();
