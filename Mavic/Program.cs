@@ -10,6 +10,8 @@ namespace Mavic
         /// <param name="commandLineOptions"></param>
         private static void ProcessParsedArguments(CommandLineOptions commandLineOptions)
         {
+            var scraper = new Scraper(commandLineOptions);
+            scraper.ProcessSubreddits().Wait();
         }
 
         /// <summary>
