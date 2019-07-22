@@ -24,7 +24,7 @@ namespace Mavic
         ///     If set to true, the tool will scrape the front page of reddit for the current most active sub-reddits and
         ///     then scrape all the imgur links directly from them sub-reddits.
         /// </summary>
-        [Option('f', "front", Required = false, HelpText = "If the front page should be scrapped or not.",
+        [Option('f', "frontpage", Required = false, HelpText = "If the front page should be scrapped or not.",
             Default = false)]
         public bool FrontPage { get; set; }
 
@@ -32,7 +32,8 @@ namespace Mavic
         ///     You can change this to adjust on what kind of images you get from Reddits filtering options (hot, new, rising,
         ///     controversial, top), hot is the default by reddit while also the default in the tool.
         /// </summary>
-        [Option('t', "type", Required = false, HelpText = "What kind of page type reddit should be scraping, e.g hot",
+        [Option('t', "type", Required = false,
+            HelpText = "What kind of page type reddit should be scraping, e.g hot, new, top, rising",
             Default = "hot")]
         public string PageType { get; set; }
 
