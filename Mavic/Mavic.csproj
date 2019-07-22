@@ -3,11 +3,20 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp3.0</TargetFramework>
+        <PackageVersion>0.0.1</PackageVersion>
+        <Title>Mavic</Title>
+        <Authors>Mamba Software, Stephen Lineker-Miller &lt;slinekermiller@gmail.com&gt;</Authors>
+        <Description>Mavic is a simple application designed to download direct imgur images found on selected reddit subreddits.</Description>
+        <Copyright>© Copyright Mamba Software</Copyright>
+        <PackageProjectUrl>https://github.com/tehstun/Mavic</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/tehstun/Mavic/LICENSE.md</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/tehstun/Mavic</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.5.0"/>
-        <PackageReference Include="Newtonsoft.Json" Version="12.0.2"/>
+        <PackageReference Include="CommandLineParser" Version="2.5.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     </ItemGroup>
 
 </Project>
