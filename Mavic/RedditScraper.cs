@@ -94,7 +94,7 @@ namespace Mavic
                         await DownloadImage(directory, image);
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // ignored
                 }
@@ -138,7 +138,7 @@ namespace Mavic
                 // since we have found a new updated file type, move/rename the file to the new path.
                 File.Move(imageFullPath, updatedFilePath);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // ignored
             }
