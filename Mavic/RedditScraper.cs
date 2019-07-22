@@ -50,7 +50,7 @@ namespace Mavic
 
             if (this._scrapingOptions.ImageLimit > 100)
             {
-                Console.Out.WriteLine("Option 'limit' is currently enforced to 50 or less due to a on going problem");
+                Console.Out.WriteLine("Option 'limit' is currently enforced to 100 or less due to a on going problem");
                 this._scrapingOptions.ImageLimit = 100;
             }
 
@@ -113,19 +113,20 @@ namespace Mavic
         /// <returns></returns>
         private static async Task DownloadImage(string outputDirectory, Image image)
         {
-            if (image.Link.EndsWith("gifv")) image.Link = image.Link.Substring(0, image.Link.Length - 1);
+            // replace gifv with mp4 for a preferred download as gifv files do not work really well on windows/desktop
+            // machines but require additional processing, while mp4 will be file.
+            if (image.Link.EndsWith("gifv")) image.Link = image.Link.Substring(0, image.Link.Length - 4) + "mp4";
             var imageImgurId = image.Link.Split("/").Last();
 
             var imageFullPath = Path.Combine(outputDirectory, imageImgurId);
             if (File.Exists(imageFullPath)) return;
+
             using var webClient = new WebClient();
+
             try
-
             {
-                if (string.IsNullOrEmpty(Path.GetExtension(imageFullPath)))
-                    // the image is probably a collection of images, which cannot be downloaded as of yet.
-                    return;
-
+                // the image is probably a collection of images, which cannot be downloaded as of yet.
+                if (string.IsNullOrEmpty(Path.GetExtension(imageFullPath))) return;
                 await webClient.DownloadFileTaskAsync(new Uri(image.Link), imageFullPath);
             }
             catch (Exception)
@@ -142,8 +143,10 @@ namespace Mavic
         private async Task<RedditListing> GatherRedditFeed(string subreddit)
         {
             Debug.Assert(!string.IsNullOrEmpty(subreddit));
+
             if (string.IsNullOrEmpty(subreddit))
                 throw new ArgumentException("sub reddit is required for downloading", "subreddit");
+
             using var httpClient = new HttpClient();
 
             var url = string.IsNullOrEmpty(this._scrapingOptions.PageType) || this._scrapingOptions.PageType == "hot" ||
