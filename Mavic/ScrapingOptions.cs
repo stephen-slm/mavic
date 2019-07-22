@@ -16,7 +16,7 @@ namespace Mavic
         /// <summary>
         ///     The total number of images to download max per sub-reddit before we continue to the next one.
         /// </summary>
-        [Option('l', "limit", Required = false, HelpText = "The total number of posts max per sub-reddit",
+        [Option('l', "limit", Required = false, HelpText = "The total number of posts max per sub-reddit.",
             Default = 50)]
         public int ImageLimit { get; set; }
 
@@ -33,7 +33,7 @@ namespace Mavic
         ///     controversial, top), hot is the default by reddit while also the default in the tool.
         /// </summary>
         [Option('t', "type", Required = false,
-            HelpText = "What kind of page type reddit should be scraping, e.g hot, new, top, rising",
+            HelpText = "What kind of page type reddit should be scraping, e.g hot, new, top, rising.",
             Default = "hot")]
         public string PageType { get; set; }
 
@@ -41,7 +41,7 @@ namespace Mavic
         ///     What subreddits are going to be scrapped for downloading of sad images.
         /// </summary>
         [Option('s', "subreddits", Required = true,
-            HelpText = "What subreddits are going to be scrapped for downloading imgur images")]
+            HelpText = "What subreddits are going to be scrapped for downloading imgur images.")]
         public IEnumerable<string> Subreddits { get; set; }
     }
 }
