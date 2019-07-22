@@ -6,12 +6,6 @@ namespace Mavic
     public class CommandLineOptions
     {
         /// <summary>
-        ///     If set then we look into improving the logging of the command line tool.
-        /// </summary>
-        [Option('v', "verbose", Required = false, HelpText = "Set output to verbose message", Default = false)]
-        public bool Verbose { get; set; }
-
-        /// <summary>
         ///     The directory in which we will be downloading all the images into, based on the folder name of the given
         ///     sub-reddit.
         /// </summary>
