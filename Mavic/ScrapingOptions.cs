@@ -3,7 +3,7 @@ using CommandLine;
 
 namespace Mavic
 {
-    public class CommandLineOptions
+    public class ScrapingOptions
     {
         /// <summary>
         ///     The directory in which we will be downloading all the images into, based on the folder name of the given

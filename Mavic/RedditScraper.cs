@@ -21,7 +21,7 @@ namespace Mavic
         /// <summary>
         ///     The options to be used throughout the parsing and scraping of the reddit site.
         /// </summary>
-        private readonly CommandLineOptions _options;
+        private readonly ScrapingOptions _scrapingOptions;
 
         /// <summary>
         ///     The list of supported image file types that can be downloaded from reddit.
@@ -43,19 +43,20 @@ namespace Mavic
         /// <summary>
         ///     Creates a new instance of the scraper with the command line options.
         /// </summary>
-        /// <param name="options">The command line options</param>
-        public RedditScraper(CommandLineOptions options)
+        /// <param name="scrapingOptions">The command line options</param>
+        public RedditScraper(ScrapingOptions scrapingOptions)
         {
-            this._options = options;
+            this._scrapingOptions = scrapingOptions;
 
-            if (this._options.ImageLimit > 100)
+            if (this._scrapingOptions.ImageLimit > 100)
             {
                 Console.Out.WriteLine("Option 'limit' is currently enforced to 50 or less due to a on going problem");
-                this._options.ImageLimit = 100;
+                this._scrapingOptions.ImageLimit = 100;
             }
 
             // if the limit goes outside the bounds of the upper and lower scopes, reset back to the 50 limit.
-            if (this._options.ImageLimit <= 0 || this._options.ImageLimit > 500) this._options.ImageLimit = 50;
+            if (this._scrapingOptions.ImageLimit <= 0 || this._scrapingOptions.ImageLimit > 500)
+                this._scrapingOptions.ImageLimit = 50;
         }
 
         /// <summary>
@@ -63,7 +64,7 @@ namespace Mavic
         /// </summary>
         public async Task ProcessSubreddits()
         {
-            foreach (var subreddit in this._options.Subreddits)
+            foreach (var subreddit in this._scrapingOptions.Subreddits)
             {
                 // if we have not already done the subreddit before, then create a new unique entry into the unique
                 // images list to keep track of all the already downloaded images by imgur image id.
@@ -75,7 +76,7 @@ namespace Mavic
                     var feed = await this.GatherRedditFeed(subreddit);
                     var links = ParseImgurLinksFromFeed(feed);
 
-                    var directory = Path.Combine(this._options.OutputDirectory, subreddit);
+                    var directory = Path.Combine(this._scrapingOptions.OutputDirectory, subreddit);
 
                     if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
@@ -146,10 +147,10 @@ namespace Mavic
 
             using var httpClient = new HttpClient();
 
-            var url = string.IsNullOrEmpty(this._options.PageType) || this._options.PageType == "hot" ||
-                      !this._supportedPageTypes.Contains(this._options.PageType)
-                ? $"https://www.reddit.com/r/{subreddit}/.json?limit={this._options.ImageLimit}&after={this._after}"
-                : $"https://www.reddit.com/r/{subreddit}/{this._options.PageType}.json?limit={this._options.ImageLimit}&after={this._after}";
+            var url = string.IsNullOrEmpty(this._scrapingOptions.PageType) || this._scrapingOptions.PageType == "hot" ||
+                      !this._supportedPageTypes.Contains(this._scrapingOptions.PageType)
+                ? $"https://www.reddit.com/r/{subreddit}/.json?limit={this._scrapingOptions.ImageLimit}&after={this._after}"
+                : $"https://www.reddit.com/r/{subreddit}/{this._scrapingOptions.PageType}.json?limit={this._scrapingOptions.ImageLimit}&after={this._after}";
 
             var source = await httpClient.GetAsync(url);
             var stringContent = await source.Content.ReadAsStringAsync();

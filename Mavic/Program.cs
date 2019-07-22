@@ -8,10 +8,10 @@ namespace Mavic
         /// <summary>
         ///     Process the property parsed commandline options.
         /// </summary>
-        /// <param name="commandLineOptions">The options parsed.</param>
-        private static void ProcessParsedArguments(CommandLineOptions commandLineOptions)
+        /// <param name="scrapingOptions">The options parsed.</param>
+        private static void ProcessParsedArguments(ScrapingOptions scrapingOptions)
         {
-            var scraper = new RedditScraper(commandLineOptions);
+            var scraper = new RedditScraper(scrapingOptions);
             scraper.ProcessSubreddits().Wait();
         }
 
@@ -29,7 +29,7 @@ namespace Mavic
         /// <param name="args">Standard arguments to be parsed.</param>
         private static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<CommandLineOptions>(args)
+            Parser.Default.ParseArguments<ScrapingOptions>(args)
                 .WithParsed(ProcessParsedArguments)
                 .WithNotParsed(ProcessParseErrors);
         }
