@@ -48,9 +48,9 @@ namespace Mavic
         {
             this._options = options;
 
-            if (this._options.ImageLimit != 50)
+            if (this._options.ImageLimit > 50)
             {
-                Console.Out.WriteLine("Option 'limit' is currently enforced to 50 due to a on going problem");
+                Console.Out.WriteLine("Option 'limit' is currently enforced to 50 or less due to a on going problem");
                 this._options.ImageLimit = 50;
             }
 
