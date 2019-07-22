@@ -24,6 +24,26 @@
 
 # How to Use
 
+Display basic help related information about the application for when you quickly need to understand possible options.
+
+```
+.\Mavic.exe --help
+
+  -o, --output        (Default: ./) The output directory to store the images.
+
+  -l, --limit         (Default: 50) The total number of posts max per sub-reddit
+
+  -f, --frontpage     (Default: false) If the front page should be scrapped or not.
+
+  -t, --type          (Default: hot) What kind of page type reddit should be scraping, e.g hot, new, top, rising
+
+  -s, --subreddits    Required. What subreddits are going to be scrapped for downloading imgur images
+
+  --help              Display this help screen.
+
+  --version           Display version information.
+```
+
 # License
 
 Mavic is licensed with a MIT License.
