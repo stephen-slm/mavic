@@ -57,6 +57,9 @@ namespace Mavic
             // if the limit goes outside the bounds of the upper and lower scopes, reset back to the 50 limit.
             if (this._scrapingOptions.ImageLimit <= 0 || this._scrapingOptions.ImageLimit > 500)
                 this._scrapingOptions.ImageLimit = 50;
+
+            if (this._scrapingOptions.FrontPage)
+                this._scrapingOptions.Subreddits = this._scrapingOptions.Subreddits.Prepend("frontpage");
         }
 
         /// <summary>
@@ -111,15 +114,13 @@ namespace Mavic
         private static async Task DownloadImage(string outputDirectory, Image image)
         {
             if (image.Link.EndsWith("gifv")) image.Link = image.Link.Substring(0, image.Link.Length - 1);
-
             var imageImgurId = image.Link.Split("/").Last();
+
             var imageFullPath = Path.Combine(outputDirectory, imageImgurId);
-
             if (File.Exists(imageFullPath)) return;
-
             using var webClient = new WebClient();
-
             try
+
             {
                 if (string.IsNullOrEmpty(Path.GetExtension(imageFullPath)))
                     // the image is probably a collection of images, which cannot be downloaded as of yet.
@@ -141,10 +142,8 @@ namespace Mavic
         private async Task<RedditListing> GatherRedditFeed(string subreddit)
         {
             Debug.Assert(!string.IsNullOrEmpty(subreddit));
-
             if (string.IsNullOrEmpty(subreddit))
                 throw new ArgumentException("sub reddit is required for downloading", "subreddit");
-
             using var httpClient = new HttpClient();
 
             var url = string.IsNullOrEmpty(this._scrapingOptions.PageType) || this._scrapingOptions.PageType == "hot" ||
@@ -152,9 +151,12 @@ namespace Mavic
                 ? $"https://www.reddit.com/r/{subreddit}/.json?limit={this._scrapingOptions.ImageLimit}&after={this._after}"
                 : $"https://www.reddit.com/r/{subreddit}/{this._scrapingOptions.PageType}.json?limit={this._scrapingOptions.ImageLimit}&after={this._after}";
 
-            var source = await httpClient.GetAsync(url);
-            var stringContent = await source.Content.ReadAsStringAsync();
+            if (subreddit == "frontpage")
+                url = $"https://www.reddit.com/.json?limit={this._scrapingOptions.ImageLimit}&after={this._after}";
 
+            var source = await httpClient.GetAsync(url);
+
+            var stringContent = await source.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<RedditListing>(stringContent);
         }
 
@@ -167,10 +169,9 @@ namespace Mavic
         {
             // ensure that the feed is not null, returning a empty list if is.
             if (redditListing == null) return new List<Image>();
-
             var possibleDataImages = redditListing.Data.Children.Where(e => e.Data.Domain.Contains("imgur")).ToList();
-            var linkImages = new List<Image>();
 
+            var linkImages = new List<Image>();
             foreach (var possibleDataImage in possibleDataImages)
             {
                 if (possibleDataImage.Data.Url == null || !possibleDataImage.Data.Url.Host.Contains("imgur")) continue;

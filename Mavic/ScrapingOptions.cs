@@ -25,7 +25,7 @@ namespace Mavic
         ///     then scrape all the imgur links directly from them sub-reddits.
         /// </summary>
         [Option('f', "front", Required = false, HelpText = "If the front page should be scrapped or not.",
-            Default = true)]
+            Default = false)]
         public bool FrontPage { get; set; }
 
         /// <summary>
