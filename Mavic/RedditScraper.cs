@@ -48,10 +48,10 @@ namespace Mavic
         {
             this._options = options;
 
-            if (this._options.ImageLimit > 50)
+            if (this._options.ImageLimit > 100)
             {
                 Console.Out.WriteLine("Option 'limit' is currently enforced to 50 or less due to a on going problem");
-                this._options.ImageLimit = 50;
+                this._options.ImageLimit = 100;
             }
 
             // if the limit goes outside the bounds of the upper and lower scopes, reset back to the 50 limit.
@@ -109,8 +109,10 @@ namespace Mavic
         /// <returns></returns>
         private static async Task DownloadImage(string outputDirectory, Image image)
         {
+            if (image.Link.EndsWith("gifv")) image.Link = image.Link.Substring(0, image.Link.Length - 1);
+
             var imageImgurId = image.Link.Split("/").Last();
-            var imageFullPath = Path.Combine(outputDirectory, $"{imageImgurId}.png");
+            var imageFullPath = Path.Combine(outputDirectory, imageImgurId);
 
             if (File.Exists(imageFullPath)) return;
 
@@ -118,25 +120,11 @@ namespace Mavic
 
             try
             {
-                await webClient.DownloadFileTaskAsync(new Uri($"{image.Link}.png"), imageFullPath);
-
-                // determine the file type and see if we can rename the file to the correct file type.
-                var detector = new FileTypeInterrogator.FileTypeInterrogator();
-                var miniType = detector.DetectType(File.ReadAllBytes(Path.GetFullPath(imageFullPath)));
-
-                if (miniType == null) return;
-
-                var updatedFilePath = Path.Combine(outputDirectory, $"{imageImgurId}.{miniType.FileType}");
-
-                // since the file already exists, delete the old file and move on.
-                if (File.Exists(updatedFilePath))
-                {
-                    File.Delete(imageFullPath);
+                if (string.IsNullOrEmpty(Path.GetExtension(imageFullPath)))
+                    // the image is probably a collection of images, which cannot be downloaded as of yet.
                     return;
-                }
 
-                // since we have found a new updated file type, move/rename the file to the new path.
-                File.Move(imageFullPath, updatedFilePath);
+                await webClient.DownloadFileTaskAsync(new Uri(image.Link), imageFullPath);
             }
             catch (Exception)
             {
@@ -185,6 +173,7 @@ namespace Mavic
             foreach (var possibleDataImage in possibleDataImages)
             {
                 if (possibleDataImage.Data.Url == null || !possibleDataImage.Data.Url.Host.Contains("imgur")) continue;
+                if (!possibleDataImage.Data.Url.LocalPath.Contains(".")) continue;
 
                 linkImages.Add(new Image
                 {

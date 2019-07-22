@@ -9,14 +9,14 @@ namespace Mavic
         ///     The directory in which we will be downloading all the images into, based on the folder name of the given
         ///     sub-reddit.
         /// </summary>
-        [Option('v', "output", Required = false, HelpText = "The output directory to store the images.",
+        [Option('o', "output", Required = false, HelpText = "The output directory to store the images.",
             Default = "./")]
         public string OutputDirectory { get; set; }
 
         /// <summary>
         ///     The total number of images to download max per sub-reddit before we continue to the next one.
         /// </summary>
-        [Option('l', "limit", Required = false, HelpText = "The total number of images max per sub-reddit",
+        [Option('l', "limit", Required = false, HelpText = "The total number of posts max per sub-reddit",
             Default = 50)]
         public int ImageLimit { get; set; }
 
