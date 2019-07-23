@@ -27,7 +27,7 @@ namespace Mavic.Types
         public string Id { get; set; }
 
         /// <summary>
-        ///     THe image id, the ending part of the imgur link.
+        ///     THe image id, the ending part of the link.
         /// </summary>
         public string ImageId { get; set; }
 
@@ -55,5 +55,10 @@ namespace Mavic.Types
         ///     The sub reddit that that the image was posted onto.
         /// </summary>
         public string Subreddit { get; set; }
+
+        /// <summary>
+        ///     The source in which the image is hosted, e.g imgur, reddit.
+        /// </summary>
+        public string Source { get; set; }
     }
 }

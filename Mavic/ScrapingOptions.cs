@@ -22,7 +22,7 @@ namespace Mavic
 
         /// <summary>
         ///     If set to true, the tool will scrape the front page of reddit for the current most active sub-reddits and
-        ///     then scrape all the imgur links directly from them sub-reddits.
+        ///     then scrape all the links directly from them sub-reddits.
         /// </summary>
         [Option('f', "frontpage", Required = false, HelpText = "If the front page should be scrapped or not.",
             Default = false)]
@@ -41,7 +41,7 @@ namespace Mavic
         ///     What subreddits are going to be scrapped for downloading of sad images.
         /// </summary>
         [Option('s', "subreddits", Required = true,
-            HelpText = "What subreddits are going to be scrapped for downloading imgur images.")]
+            HelpText = "What subreddits are going to be scrapped for downloading images.")]
         public IEnumerable<string> Subreddits { get; set; }
     }
 }
