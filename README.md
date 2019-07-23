@@ -19,6 +19,7 @@
 
 <p align="center">
   <a href="#how-to-use">How To Use</a> •
+  <a href="#releases">Releases</a> •
   <a href="#license">License</a>
 </p>
 
@@ -67,6 +68,10 @@ Downloading all cute and frontpage images of the hot 100 posts and ouputting to 
 <div align="center">
     <img src="./docs/img/home.gif" width="650" />
 </div>
+
+# Releases
+
+Release information can be found here: https://github.com/tehstun/Mavic/releases
 
 # License
 
