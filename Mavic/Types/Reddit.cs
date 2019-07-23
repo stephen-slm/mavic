@@ -65,6 +65,11 @@ namespace Mavic.Types
 
         /// <summary>
         /// </summary>
+        [JsonProperty("post_hint")]
+        public string PostHint { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty("url")]
         public Uri Url { get; set; }
 

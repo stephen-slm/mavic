@@ -8,7 +8,7 @@
     </a>
 </h1>
 
-<h4 align="center">Mavic is a simple application designed to download direct imgur images found on selected reddit subreddits.</h4>
+<h4 align="center">Mavic is a CLI application designed to download direct images found on selected reddit subreddits.</h4>
 
 <p align="center">
   <a>
@@ -37,12 +37,36 @@ Display basic help related information about the application for when you quickl
 
   -t, --type          (Default: hot) What kind of page type reddit should be scraping, e.g hot, new, top, rising.
 
-  -s, --subreddits    Required. What subreddits are going to be scrapped for downloading imgur images.
+  -s, --subreddits    Required. What subreddits are going to be scrapped for downloading images.
 
   --help              Display this help screen.
 
   --version           Display version information.
 ```
+
+Downloading all imgur images from the last 50 r/cute currently on hot.
+
+`.\Mavic.exe --subreddits cute`
+
+Downloading all imgur images from the top 25 r/cute, r/cats, r/aww into a picture folder.
+
+`.\Mavic.exe --subreddits cute cats aww -l 25 --output ./pictures`
+
+Downloading cat pictures and the front page images of the last 100 items.
+
+`.\Mavic.exe -s cute -f --limit 100`
+
+Downloading all top gifs from the top 100 r/gifs posts of all time.
+
+`.\Mavic.exe -s gifs -l 100 --type top`
+
+Downloading all cute and frontpage images of the hot 100 posts and ouputting to a pictures folder.
+
+`.\Mavic.exe --subreddits cute -l 100 --output ./pictures -f`
+
+<div align="center">
+    <img src="./docs/img/home.gif" width="650" />
+</div>
 
 # License
 
