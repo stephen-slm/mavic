@@ -44,11 +44,11 @@ Display basic help related information about the application for when you quickl
   --version           Display version information.
 ```
 
-Downloading all imgur images from the last 50 r/cute currently on hot.
+Downloading all images from the last 50 r/cute currently on hot.
 
 `.\Mavic.exe --subreddits cute`
 
-Downloading all imgur images from the top 25 r/cute, r/cats, r/aww into a picture folder.
+Downloading all images from the top 25 r/cute, r/cats, r/aww into a picture folder.
 
 `.\Mavic.exe --subreddits cute cats aww -l 25 --output ./pictures`
 
