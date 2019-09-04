@@ -2,16 +2,20 @@ package main
 
 import (
 	"flag"
-	"fmt"
+
+	"github.com/tehstun/mavic/src/reddit"
 )
 
-func generateScrapingOptions(arguments []string) ScrapingOptions {
-	scrapingOptions := options{}
-	scrapingOptions.parse(arguments)
-	return scrapingOptions
+// generateScrapingOptions generates some scraping options based on the input
+// arguments which would commonly be the command line arguments.
+func generateScrapingOptions(arguments []string) reddit.Options {
+	options := reddit.Options{}
+	options.Parse(arguments)
+	return options
 }
 
 func main() {
 	scrapingOptions := generateScrapingOptions(flag.Args())
-	fmt.Println(scrapingOptions)
+	scraper := reddit.NewScraper(scrapingOptions)
+	scraper.ProcessSubreddits()
 }
