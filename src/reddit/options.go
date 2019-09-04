@@ -1,10 +1,10 @@
-package main
+package reddit
 
 import (
 	"flag"
 )
 
-type options struct {
+type Options struct {
 	//  The directory in which we will be downloading all the images into, based on the folder name
 	//  of the given sub-reddit.
 	outputDirectory string
@@ -27,7 +27,7 @@ type options struct {
 
 // parse takes a list of command line arguments and binds them to the scrapingOptions, using default
 // values if the arguments are not given.
-func (s *options) parse(arguments []string) {
+func (s *Options) Parse(arguments []string) {
 	commandLine := flag.CommandLine
 
 	commandLine.StringVar(&s.outputDirectory, "OutputDirectory", "./", "The output directory to store the images.")
