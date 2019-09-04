@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 )
 
-type ScrapingOptions struct {
+type options struct {
 	//  The directory in which we will be downloading all the images into, based on the folder name
 	//  of the given sub-reddit.
 	outputDirectory string
@@ -28,14 +27,12 @@ type ScrapingOptions struct {
 
 // parse takes a list of command line arguments and binds them to the scrapingOptions, using default
 // values if the arguments are not given.
-func (s ScrapingOptions) parse(arguments []string) {
-	CommandLine := flag.CommandLine
+func (s *options) parse(arguments []string) {
+	commandLine := flag.CommandLine
 
-	CommandLine.StringVar(&s.outputDirectory, "OutputDirectory", "./", "The output directory to store the images.")
-	CommandLine.IntVar(&s.imageLimit, "ImageLimit", 50, "The output directory to store the images.")
-	CommandLine.BoolVar(&s.frontPage, "FrontPage", false, "The output directory to store the images.")
+	commandLine.StringVar(&s.outputDirectory, "OutputDirectory", "./", "The output directory to store the images.")
+	commandLine.IntVar(&s.imageLimit, "ImageLimit", 50, "The output directory to store the images.")
+	commandLine.BoolVar(&s.frontPage, "FrontPage", false, "The output directory to store the images.")
 
-	CommandLine.Parse(arguments)
-
-	fmt.Println(s)
+	_ = commandLine.Parse(arguments)
 }

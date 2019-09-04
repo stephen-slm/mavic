@@ -6,7 +6,7 @@ import (
 )
 
 func generateScrapingOptions(arguments []string) ScrapingOptions {
-	scrapingOptions := ScrapingOptions{}
+	scrapingOptions := options{}
 	scrapingOptions.parse(arguments)
 	return scrapingOptions
 }
