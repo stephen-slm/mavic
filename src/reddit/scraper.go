@@ -3,18 +3,20 @@ package reddit
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
-	"sort"
+	"os"
+	"path"
 	"strings"
 )
 
 type Scraper struct {
 	after              int
 	scrapingOptions    Options
-	supportedFileTypes []string
-	supportedPageTypes []string
-	uniqueImageIds     map[string][]string
+	supportedFileTypes map[string]bool
+	supportedPageTypes map[string]bool
+	uniqueImageIds     map[string]map[string]bool
 }
 
 // NewRedditScraper creates a instance of the reddit reddit used for taking images
@@ -23,9 +25,9 @@ type Scraper struct {
 func NewScraper(options Options) Scraper {
 	redditScraper := Scraper{
 		after:              0,
-		supportedFileTypes: []string{"jpeg", "png", "gif", "apng", "tiff", "pdf", "xcf"},
-		supportedPageTypes: []string{"hot", "new", "rising", "controversial", "top"},
-		uniqueImageIds:     map[string][]string{},
+		supportedFileTypes: map[string]bool{"jpeg": true, "png": true, "gif": true, "apng": true, "tiff": true, "pdf": true, "xcf": true},
+		supportedPageTypes: map[string]bool{"hot": true, "new": true, "rising": true, "controversial": true, "top": true},
+		uniqueImageIds:     map[string]map[string]bool{},
 	}
 
 	if options.imageLimit > 100 {
@@ -53,14 +55,64 @@ func (s Scraper) ProcessSubreddits() {
 		// create a new unique entry into he unique image list to keep
 		// track of all the already downloaded images by id.
 		if _, ok := s.uniqueImageIds[sub]; !ok {
-			s.uniqueImageIds[sub] = []string{}
+			s.uniqueImageIds[sub] = map[string]bool{}
 		}
 
 		listings, _ := s.gatherRedditFeed(sub)
 		links := parseLinksFromListings(listings)
 
-		fmt.Println(links)
+		dir := path.Join(s.scrapingOptions.outputDirectory, sub)
+
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			_ = os.Mkdir(dir, os.ModePerm)
+		}
+
+		fmt.Printf("\n\nDownloading %v images from /r/%v", len(links), sub)
+
+		for _, image := range links {
+			// if the image id is already been downloaded (the post came up twice) or the image id that we managed
+			// to obtain was empty, then continue since we don't have anything to work with. Skipping or attempting
+			// to not download a non-existing image.
+			if strings.TrimSpace(image.imageId) == "" || s.uniqueImageIds[sub][image.imageId] {
+				continue
+			}
+
+			fmt.Printf("\nDownloading %20v - /r/%-20v - %v", image.imageId, image.subreddit, image.source)
+			s.uniqueImageIds[sub][image.imageId] = true
+
+			downloadImage(dir, image)
+		}
 	}
+}
+
+func downloadImage(outDir string, image Image) {
+	// replace gif-v with mp4 for a preferred download as a gif-v file does not work really well on windows
+	// machines but require additional processing. While mp4s work fine.
+	if strings.HasSuffix(image.link, "gifv") {
+		image.link = image.link[:len(image.link)-4] + "mp4"
+	}
+
+	// the image id again but this time containing the file type,
+	// which allows us to determine the file type without having
+	// to do any fancy work.
+	imageIdSplit := strings.Split(image.link, "/")
+	imageId := imageIdSplit[len(imageIdSplit)-1]
+
+	// returning early if the file already exists, ensuring another check before we go and
+	// attempt to download the file, reducing the chance of re-downloading already existing
+	// posts.
+	imagePath := path.Join(outDir, imageId)
+	if _, err := os.Stat(imagePath); !os.IsNotExist(err) {
+		return
+	}
+
+	out, _ := os.Create(imagePath)
+	defer out.Close()
+
+	resp, _ := http.Get(image.link)
+	defer resp.Body.Close()
+
+	_, _ = io.Copy(out, resp.Body)
 }
 
 // determineRedditUrl will take in a sub reddit that will be used to determine
@@ -69,7 +121,7 @@ func (s Scraper) ProcessSubreddits() {
 // handling empty page type or invalid types (defaulting to hot)
 func (s Scraper) determineRedditUrl(sub string) string {
 	emptyPageType := strings.TrimSpace(s.scrapingOptions.pageType) == ""
-	invalidType := sort.SearchStrings(s.supportedPageTypes, s.scrapingOptions.pageType) == len(s.supportedPageTypes)
+	invalidType := s.supportedFileTypes[s.scrapingOptions.pageType]
 
 	if sub == "frontpage" {
 		return fmt.Sprintf("https://www.reddit.com/.json?limit=%d&after=%d", s.scrapingOptions.imageLimit, s.after)
