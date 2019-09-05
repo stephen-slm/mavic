@@ -1,21 +1,70 @@
 package main
 
 import (
-	"flag"
+	"log"
+	"os"
 
 	"github.com/tehstun/mavic/src/reddit"
+	"github.com/urfave/cli"
 )
 
-// generateScrapingOptions generates some scraping options based on the input
-// arguments which would commonly be the command line arguments.
-func generateScrapingOptions(arguments []string) reddit.Options {
-	options := reddit.Options{}
-	options.Parse(arguments)
-	return options
+var app = cli.NewApp()
+var options = reddit.Options{}
+
+func setupApplicationInformation() {
+	app.Name = "Mavic"
+	app.Description = "Mavic is a CLI application designed to download direct images found on selected reddit subreddits."
+	app.Usage = ".\\mavic.exe --subreddits cute -l 100 --output ./pictures -f"
+	app.Author = "Stephen Lineker-Miller <slinekermiller@gmail.com>"
+	app.Version = "0.0.1"
+}
+
+func setupApplicationFlags() {
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "output",
+			Usage:       "The output directory to store the images.",
+			Required:    false,
+			Value:       "./",
+			Destination: &options.OutputDirectory,
+		}, cli.IntFlag{
+			Name:        "limit",
+			Usage:       "The total number of posts max per sub-reddit",
+			Value:       50,
+			Destination: &options.ImageLimit,
+		},
+		cli.BoolFlag{
+			Name:        "frontpage",
+			Usage:       "If the front page should be scrapped or not.",
+			Destination: &options.FrontPage,
+		},
+		cli.StringFlag{
+			Name:        "type",
+			Usage:       "What kind of page type should reddit be during the scrapping process. e.g hot, new. top.",
+			Value:       "hot",
+			Destination: &options.PageType,
+		},
+		cli.StringSliceFlag{
+			Name:     "subreddits",
+			Usage:    "What subreddits are going to be scrapped for downloading images.",
+			Required: true,
+		},
+	}
 }
 
 func main() {
-	scrapingOptions := generateScrapingOptions(flag.Args())
-	scraper := reddit.NewScraper(scrapingOptions)
-	scraper.ProcessSubreddits()
+	setupApplicationInformation()
+	setupApplicationFlags()
+
+	app.Action = func(c *cli.Context) error {
+		scraper := reddit.NewScraper(options)
+		scraper.ProcessSubreddits()
+		return nil
+	}
+
+	err := app.Run(os.Args)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }

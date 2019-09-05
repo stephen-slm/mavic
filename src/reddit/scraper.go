@@ -30,17 +30,17 @@ func NewScraper(options Options) Scraper {
 		uniqueImageIds:     map[string]map[string]bool{},
 	}
 
-	if options.imageLimit > 100 {
+	if options.ImageLimit > 100 {
 		fmt.Println("Option 'limit' is currently enforced to 100 or les due ot a on going problem")
-		options.imageLimit = 100
+		options.ImageLimit = 100
 	}
 
-	if options.imageLimit <= 0 || options.imageLimit > 500 {
-		redditScraper.scrapingOptions.imageLimit = 50
+	if options.ImageLimit <= 0 || options.ImageLimit > 500 {
+		redditScraper.scrapingOptions.ImageLimit = 50
 	}
 
-	if !options.frontPage {
-		options.subreddits = append(options.subreddits, "frontpage")
+	if options.FrontPage {
+		options.Subreddits = append(options.Subreddits, "frontpage")
 	}
 
 	redditScraper.scrapingOptions = options
@@ -50,7 +50,7 @@ func NewScraper(options Options) Scraper {
 // ProcessSubreddits starts the downloading process of all the images
 // in the sub reddits
 func (s Scraper) ProcessSubreddits() {
-	for _, sub := range s.scrapingOptions.subreddits {
+	for _, sub := range s.scrapingOptions.Subreddits {
 		// if we have not already done this sub reddit before, then
 		// create a new unique entry into he unique image list to keep
 		// track of all the already downloaded images by id.
@@ -61,7 +61,7 @@ func (s Scraper) ProcessSubreddits() {
 		listings, _ := s.gatherRedditFeed(sub)
 		links := parseLinksFromListings(listings)
 
-		dir := path.Join(s.scrapingOptions.outputDirectory, sub)
+		dir := path.Join(s.scrapingOptions.OutputDirectory, sub)
 
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			_ = os.Mkdir(dir, os.ModePerm)
@@ -120,19 +120,19 @@ func downloadImage(outDir string, image Image) {
 // setting and marking the image limit and what stage they are currently at.
 // handling empty page type or invalid types (defaulting to hot)
 func (s Scraper) determineRedditUrl(sub string) string {
-	emptyPageType := strings.TrimSpace(s.scrapingOptions.pageType) == ""
-	invalidType := s.supportedFileTypes[s.scrapingOptions.pageType]
+	emptyPageType := strings.TrimSpace(s.scrapingOptions.PageType) == ""
+	invalidType := s.supportedFileTypes[s.scrapingOptions.PageType]
 
 	if sub == "frontpage" {
-		return fmt.Sprintf("https://www.reddit.com/.json?limit=%d&after=%d", s.scrapingOptions.imageLimit, s.after)
+		return fmt.Sprintf("https://www.reddit.com/.json?limit=%d&after=%d", s.scrapingOptions.ImageLimit, s.after)
 	}
 	if emptyPageType || invalidType {
 		return fmt.Sprintf("https://www.reddit.com/r/%s/.json?limit=%d&after=%d",
-			sub, s.scrapingOptions.imageLimit, s.after)
+			sub, s.scrapingOptions.ImageLimit, s.after)
 	}
 
 	return fmt.Sprintf("https://www.reddit.com/r/%s/%s.json?limit=%d&after=%d",
-		sub, s.scrapingOptions.pageType, s.scrapingOptions.imageLimit, s.after)
+		sub, s.scrapingOptions.PageType, s.scrapingOptions.ImageLimit, s.after)
 }
 
 // Downloads and parses the reddit json feed based on the sub reddit. Ensuring that
