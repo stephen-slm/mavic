@@ -48,6 +48,7 @@ func setupApplicationFlags() {
 			Name:     "subreddits, s",
 			Usage:    "What subreddits are going to be scrapped for downloading images.",
 			Required: true,
+			Value:    &cli.StringSlice{},
 		},
 	}
 }
@@ -57,6 +58,7 @@ func main() {
 	setupApplicationFlags()
 
 	app.Action = func(c *cli.Context) error {
+		options.Subreddits = c.StringSlice("subreddits")
 		scraper := reddit.NewScraper(options)
 		scraper.ProcessSubreddits()
 		return nil
