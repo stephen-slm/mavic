@@ -22,30 +22,30 @@ func setupApplicationInformation() {
 func setupApplicationFlags() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:        "output",
+			Name:        "output, o",
 			Usage:       "The output directory to store the images.",
 			Required:    false,
 			Value:       "./",
 			Destination: &options.OutputDirectory,
 		}, cli.IntFlag{
-			Name:        "limit",
+			Name:        "limit, l",
 			Usage:       "The total number of posts max per sub-reddit",
 			Value:       50,
 			Destination: &options.ImageLimit,
 		},
 		cli.BoolFlag{
-			Name:        "frontpage",
+			Name:        "frontpage, f",
 			Usage:       "If the front page should be scrapped or not.",
 			Destination: &options.FrontPage,
 		},
 		cli.StringFlag{
-			Name:        "type",
+			Name:        "type, t",
 			Usage:       "What kind of page type should reddit be during the scrapping process. e.g hot, new. top.",
 			Value:       "hot",
 			Destination: &options.PageType,
 		},
 		cli.StringSliceFlag{
-			Name:     "subreddits",
+			Name:     "subreddits, s",
 			Usage:    "What subreddits are going to be scrapped for downloading images.",
 			Required: true,
 		},
