@@ -64,7 +64,7 @@ func (s Scraper) ProcessSubreddits() {
 		dir := path.Join(s.scrapingOptions.OutputDirectory, sub)
 
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			_ = os.Mkdir(dir, os.ModePerm)
+			_ = os.MkdirAll(dir, os.ModePerm)
 		}
 
 		fmt.Printf("\n\nDownloading %v images from /r/%v", len(links), sub)
@@ -106,12 +106,25 @@ func downloadImage(outDir string, image Image) {
 		return
 	}
 
-	out, _ := os.Create(imagePath)
+	out, osErr := os.Create(imagePath)
+
+	// early return if the os failed to create any of the folders, since there is
+	// no reason to attempt to download the file if we don't have any where to
+	// write the file to after wards.
+	if osErr != nil {
+		return
+	}
+
 	defer out.Close()
+	resp, err := http.Get(image.link)
 
-	resp, _ := http.Get(image.link)
+	// early return if we failed to download the given file due to a
+	// unexpected http error.
+	if err != nil {
+		return
+	}
+
 	defer resp.Body.Close()
-
 	_, _ = io.Copy(out, resp.Body)
 }
 
