@@ -44,7 +44,7 @@ func setupApplicationFlags() {
 			Value:       "hot",
 			Destination: &options.PageType,
 		},
-		cli.StringSliceFlag{
+		cli.StringFlag{
 			Name:     "subreddits, s",
 			Usage:    "What subreddits are going to be scrapped for downloading images.",
 			Required: true,
