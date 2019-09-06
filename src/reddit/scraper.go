@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -12,11 +13,21 @@ import (
 )
 
 type Scraper struct {
-	after              int
-	scrapingOptions    Options
-	supportedFileTypes map[string]bool
+	// after is used for when you increase over the number of possible records, so the limit on
+	// reddit is 100, so if you ask for 110 images, first we must check the first 100 and then
+	// update after to 1, to see the next 10.
+	after int
+	// the options used for the scraping process, this includes limits, pages, page types and
+	// sub reddits to be parsed. This is the central point of truth.
+	scrapingOptions Options
+	// the supported page types that can be used on reddit, this is hot, new, rising, etc. if
+	// the user chooses a unsupported page type, then we will just default to reddits default
+	// which is currently hot.
 	supportedPageTypes map[string]bool
-	uniqueImageIds     map[string]map[string]bool
+	// A list of unique ids of the already downloaded images, this means that if a image/post
+	// comes up again for any reason then we don't go and download this for the given sub.
+	// if it came up multiple times in multiple sub reddits, then it would be downloaded again.
+	uniqueImageIds map[string]map[string]bool
 }
 
 // NewRedditScraper creates a instance of the reddit reddit used for taking images
@@ -25,7 +36,6 @@ type Scraper struct {
 func NewScraper(options Options) Scraper {
 	redditScraper := Scraper{
 		after:              0,
-		supportedFileTypes: map[string]bool{"jpeg": true, "png": true, "gif": true, "apng": true, "tiff": true, "pdf": true, "xcf": true},
 		supportedPageTypes: map[string]bool{"hot": true, "new": true, "rising": true, "controversial": true, "top": true},
 		uniqueImageIds:     map[string]map[string]bool{},
 	}
@@ -80,12 +90,16 @@ func (s Scraper) ProcessSubreddits() {
 			fmt.Printf("\nDownloading %20v - /r/%-20v - %v", image.imageId, image.subreddit, image.source)
 			s.uniqueImageIds[sub][image.imageId] = true
 
-			downloadImage(dir, image)
+			err := downloadImage(dir, image)
+
+			if err != nil {
+				fmt.Printf("\nFailed Downloading %20v - /r/%-20v - %v - error %v", image.imageId, image.subreddit, image.source, err)
+			}
 		}
 	}
 }
 
-func downloadImage(outDir string, image Image) {
+func downloadImage(outDir string, image Image) error {
 	// replace gif-v with mp4 for a preferred download as a gif-v file does not work really well on windows
 	// machines but require additional processing. While mp4s work fine.
 	if strings.HasSuffix(image.link, "gifv") {
@@ -103,16 +117,16 @@ func downloadImage(outDir string, image Image) {
 	// posts.
 	imagePath := path.Join(outDir, imageId)
 	if _, err := os.Stat(imagePath); !os.IsNotExist(err) {
-		return
+		return err
 	}
 
-	out, osErr := os.Create(imagePath)
+	out, err := os.Create(imagePath)
 
 	// early return if the os failed to create any of the folders, since there is
 	// no reason to attempt to download the file if we don't have any where to
 	// write the file to after wards.
-	if osErr != nil {
-		return
+	if err != nil {
+		return err
 	}
 
 	defer out.Close()
@@ -121,11 +135,13 @@ func downloadImage(outDir string, image Image) {
 	// early return if we failed to download the given file due to a
 	// unexpected http error.
 	if err != nil {
-		return
+		return err
 	}
 
 	defer resp.Body.Close()
-	_, _ = io.Copy(out, resp.Body)
+	_, err = io.Copy(out, resp.Body)
+
+	return err
 }
 
 // determineRedditUrl will take in a sub reddit that will be used to determine
@@ -134,7 +150,7 @@ func downloadImage(outDir string, image Image) {
 // handling empty page type or invalid types (defaulting to hot)
 func (s Scraper) determineRedditUrl(sub string) string {
 	emptyPageType := strings.TrimSpace(s.scrapingOptions.PageType) == ""
-	invalidType := s.supportedFileTypes[s.scrapingOptions.PageType]
+	invalidType := s.supportedPageTypes[s.scrapingOptions.PageType]
 
 	if sub == "frontpage" {
 		return fmt.Sprintf("https://www.reddit.com/.json?limit=%d&after=%d", s.scrapingOptions.ImageLimit, s.after)
@@ -160,7 +176,11 @@ func (s Scraper) gatherRedditFeed(sub string) (Listings, error) {
 	req, _ := http.NewRequest("GET", s.determineRedditUrl(sub), nil)
 	req.Header.Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
 
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Panic(err)
+	}
 
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
