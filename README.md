@@ -30,7 +30,7 @@ Display basic help related information about the application for when you quickl
     main.exe [global options] command [command options] [arguments...]
  
  VERSION:
-    0.0.1
+    0.0.2
  
  DESCRIPTION:
     Mavic is a CLI application designed to download direct images found on selected reddit subreddits.
