@@ -54,6 +54,12 @@ func setupApplicationFlags() {
 			Usage:       "If specified, downloads the images directly into the root, not the subreddit folder.",
 			Destination: &options.RootFolderOnly,
 		},
+		cli.IntFlag{
+			Name:        "concurrentCount, c",
+			Usage:       "The number of images that can be downloaded at the same time.",
+			Value:       25,
+			Destination: &options.MaxConcurrentDownloads,
+		},
 	}
 }
 

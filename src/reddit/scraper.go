@@ -1,6 +1,7 @@
 package reddit
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +12,8 @@ import (
 	"path"
 	"strings"
 	"sync"
+
+	"golang.org/x/sync/semaphore"
 )
 
 // DownloadState is the outcome constant of the download process. Used
@@ -168,10 +171,21 @@ func (s Scraper) downloadRedditMetadata() {
 func (s Scraper) downloadImages() {
 	var waitGroup sync.WaitGroup
 
+	ctx := context.Background()
+	sem := semaphore.NewWeighted(int64(s.scrapingOptions.MaxConcurrentDownloads))
+
 	for img := range s.downloadImageChannel {
 		waitGroup.Add(1)
 
-		go s.downloadImage(path.Join(s.scrapingOptions.OutputDirectory, img.subreddit), img, &waitGroup)
+		if err := sem.Acquire(ctx, 1); err != nil {
+			fmt.Printf("Failed to acquire semaphore: %v\n", err)
+		}
+
+		go func(img Image) {
+			s.downloadImage(path.Join(s.scrapingOptions.OutputDirectory, img.subreddit), img)
+			sem.Release(1)
+			waitGroup.Done()
+		}(img)
 	}
 
 	waitGroup.Wait()
@@ -179,11 +193,8 @@ func (s Scraper) downloadImages() {
 }
 
 // downloadImage takes in the directory, image and sync group used to
-// download a given reddit image to a given directory and letting the
-// sync group know if and when its complete (regardless of the outcome).
-func (s Scraper) downloadImage(outDir string, img Image, group *sync.WaitGroup) {
-	defer group.Done()
-
+// download a given reddit image to a given directory.
+func (s Scraper) downloadImage(outDir string, img Image) {
 	s.downloadedMessagePumpChannel <- fmt.Sprintf("Downloading %20v - /r/%-20v - %v", img.imageId, img.subreddit, img.source)
 
 	// if we are just going into the root, remove everything after the last forward slash.
