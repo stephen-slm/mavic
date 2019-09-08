@@ -4,7 +4,7 @@
     </a>
     <br/>
     <a href="https://github.com/tehstun/mavic">
-      <img src="https://img.shields.io/badge/Mavic-v0.0.1-blue.svg" alt="mavic-Version">
+      <img src="https://img.shields.io/badge/Mavic-v0.0.2-blue.svg" alt="mavic-Version">
     </a>
 </h1>
 
