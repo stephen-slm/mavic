@@ -92,7 +92,7 @@ func start(c *cli.Context) error {
 	// create a new reddit scraper and process through all the sub reddits
 	// downloading the images in the output folder / sub reddit / image.
 	scraper := reddit.NewScraper(options)
-	scraper.ProcessSubreddits()
+	scraper.Start()
 	return nil
 }
 
