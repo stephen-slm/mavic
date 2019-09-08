@@ -49,6 +49,11 @@ func setupApplicationFlags() {
 			Usage:    "What subreddits are going to be scrapped for downloading images.",
 			Required: true,
 		},
+		cli.BoolFlag{
+			Name:        "root, r",
+			Usage:       "If specified, downloads the images directly into the root, not the subreddit folder.",
+			Destination: &options.RootFolderOnly,
+		},
 	}
 }
 
