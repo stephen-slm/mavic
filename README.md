@@ -4,7 +4,7 @@
     </a>
     <br/>
     <a href="https://github.com/tehstun/mavic">
-      <img src="https://img.shields.io/badge/Mavic-v0.0.3-blue.svg" alt="mavic-Version">
+      <img src="https://img.shields.io/badge/Mavic-v0.1.0-blue.svg" alt="mavic-Version">
     </a>
 </h1>
 
@@ -32,7 +32,7 @@ USAGE:
    main.exe [global options] command [command options] [arguments...]
 
 VERSION:
-   0.0.3
+   0.1.0
 
 DESCRIPTION:
    Mavic is a CLI application designed to download direct images found on selected reddit subreddits.
