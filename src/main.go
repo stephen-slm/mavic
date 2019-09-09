@@ -6,56 +6,57 @@ import (
 	"strings"
 
 	"github.com/tehstun/mavic/src/reddit"
-	"github.com/urfave/cli"
+	"gopkg.in/urfave/cli.v2"
 )
 
-var app = cli.NewApp()
+var app = &cli.App{}
 var options = reddit.Options{}
 
 func setupApplicationInformation() {
 	app.Name = "Mavic"
 	app.Description = "Mavic is a CLI application designed to download direct images found on selected reddit subreddits."
-	app.Usage = ".\\mavic.exe --subreddits cute -l 100 --output ./pictures -f"
-	app.Author = "Stephen Lineker-Miller <slinekermiller@gmail.com>"
-	app.Version = "0.0.2"
+	app.Usage = ".\\mavic.exe -l 100 --output ./pictures -f cute pics memes"
+	app.Authors = []*cli.Author{{Name: "Stephen Lineker-Miller", Email: "slinekermiller@gmail.com"}}
+	app.Version = "0.0.3"
 }
 
 func setupApplicationFlags() {
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:        "output, o",
+		&cli.StringFlag{
+			Name:        "output",
+			Aliases:     []string{"o"},
 			Usage:       "The output directory to store the images.",
 			Value:       "./",
 			Destination: &options.OutputDirectory,
-		}, cli.IntFlag{
-			Name:        "limit, l",
+		}, &cli.IntFlag{
+			Name:        "limit",
+			Aliases:     []string{"l"},
 			Usage:       "The total number of posts max per sub-reddit",
 			Value:       50,
 			Destination: &options.ImageLimit,
 		},
-		cli.BoolFlag{
-			Name:        "frontpage, f",
+		&cli.BoolFlag{
+			Name:        "frontpage",
+			Aliases:     []string{"f"},
 			Usage:       "If the front page should be scrapped or not.",
 			Destination: &options.FrontPage,
 		},
-		cli.StringFlag{
-			Name:        "type, t",
+		&cli.StringFlag{
+			Name:        "type",
+			Aliases:     []string{"t"},
 			Usage:       "What kind of page type should reddit be during the scrapping process. e.g hot, new. top.",
 			Value:       "hot",
 			Destination: &options.PageType,
 		},
-		cli.StringFlag{
-			Name:     "subreddits, s",
-			Usage:    "What subreddits are going to be scrapped for downloading images.",
-			Required: true,
-		},
-		cli.BoolFlag{
-			Name:        "root, r",
+		&cli.BoolFlag{
+			Name:        "root",
+			Aliases:     []string{"r"},
 			Usage:       "If specified, downloads the images directly into the root, not the subreddit folder.",
 			Destination: &options.RootFolderOnly,
 		},
-		cli.IntFlag{
-			Name:        "concurrentCount, c",
+		&cli.IntFlag{
+			Name:        "concurrentCount",
+			Aliases:     []string{"c"},
 			Usage:       "The number of images that can be downloaded at the same time.",
 			Value:       25,
 			Destination: &options.MaxConcurrentDownloads,
@@ -67,10 +68,10 @@ func setupApplicationFlags() {
 // a slice of the sub reddits to be processed, there is currently a bug with the
 // cli tools which is resulting in the funky processing and its best to just
 // process it as a string for the time being.
-func processSubreddits(subreddits string, arguments []string) []string {
+func processSubreddits(arguments []string) []string {
 	// since it only seems to parse the first element, even though more was selected
 	// so we push it here and then go and grab the remaining.
-	processed := []string{subreddits}
+	var processed []string
 
 	for i := 0; i < len(arguments); i++ {
 		value := arguments[i]
@@ -91,7 +92,7 @@ func processSubreddits(subreddits string, arguments []string) []string {
 // and building a context around the cli application. This is the time the sub
 // reddits are parsed since the cli tools don't support binding stringSlices.
 func start(c *cli.Context) error {
-	options.Subreddits = processSubreddits(c.String("subreddits"), c.Args())
+	options.Subreddits = processSubreddits(c.Args().Slice())
 
 	// if it equals nil, and no sub reddits was given, then just set them
 	// as s empty slice, letting the scraper handle the empty case as

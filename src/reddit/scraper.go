@@ -77,11 +77,22 @@ func (s Scraper) Start() {
 // sets the default options and data into the reddit reddit.
 func NewScraper(options Options) Scraper {
 	redditScraper := Scraper{
-		after:                        0,
-		supportedPageTypes:           map[string]bool{"hot": true, "new": true, "rising": true, "controversial": true, "top": true},
+		after: 0,
+		supportedPageTypes: map[string]bool{"hot": true, "new": true, "rising": true, "best": true,
+			"top-hour": true, "top-week": true, "top-month": true, "top-year": true, "top-all": true, "top": true,
+			"controversial-hour": true, "controversial-week": true, "controversial-month": true,
+			"controversial-year": true, "controversial-all": true, "controversial": true,
+		},
 		uniqueImageIds:               map[string]map[string]bool{},
 		downloadImageChannel:         make(chan Image),
 		downloadedMessagePumpChannel: make(chan string),
+	}
+
+	// we don't want to continue to process the data if the given page
+	// type is not valid. Determined it will exit earlier over
+	// trying to handle it later to improve code quality.
+	if !redditScraper.supportedPageTypes[options.PageType] {
+		log.Fatalf("Invalid page type '%v' used, reference README for valid page types.\n", options.PageType)
 	}
 
 	if options.ImageLimit > 100 {
@@ -318,21 +329,26 @@ func parseLinksFromListings(listings Listings) []Image {
 // determineRedditUrl will take in a sub reddit that will be used to determine
 // what reddit url would be used based on the scraping options, this includes
 // setting and marking the image limit and what stage they are currently at.
-// handling empty page type or invalid types (defaulting to hot)
+// (defaulting to hot)
 func (s Scraper) determineRedditUrl(sub string) string {
-	emptyPageType := strings.TrimSpace(s.scrapingOptions.PageType) == ""
-	invalidType := s.supportedPageTypes[s.scrapingOptions.PageType]
+	pageType := s.scrapingOptions.PageType
+	additional := ""
+
+	// if a page type is a type that supports having a time span (e.g top and controversial) then
+	// split out the page type and adjust the additional to contain the time span and assign the page
+	// type to the correct reddit representation.
+	if strings.Contains(pageType, "-") {
+		pageSplit := strings.Split(pageType, "-")
+		additional = fmt.Sprintf("&t=%v", pageSplit[1])
+		pageType = pageSplit[0]
+	}
 
 	if sub == "frontpage" {
-		return fmt.Sprintf("https://www.reddit.com/.json?limit=%d&after=%d", s.scrapingOptions.ImageLimit, s.after)
-	}
-	if emptyPageType || invalidType {
-		return fmt.Sprintf("https://www.reddit.com/r/%s/.json?limit=%d&after=%d",
-			sub, s.scrapingOptions.ImageLimit, s.after)
+		return fmt.Sprintf("https://www.reddit.com/%v/.json?limit=%v&after=%v%v", pageType, s.scrapingOptions.ImageLimit, s.after, additional)
 	}
 
-	return fmt.Sprintf("https://www.reddit.com/r/%s/%s.json?limit=%d&after=%d",
-		sub, s.scrapingOptions.PageType, s.scrapingOptions.ImageLimit, s.after)
+	return fmt.Sprintf("https://www.reddit.com/r/%s/.json?limit=%d&after=%d",
+		sub, s.scrapingOptions.ImageLimit, s.after)
 }
 
 // processDownloadMessage takes in a state image and err and based on the state will
