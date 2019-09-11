@@ -347,8 +347,10 @@ func (s Scraper) determineRedditUrl(sub string) string {
 		return fmt.Sprintf("https://www.reddit.com/%v/.json?limit=%v&after=%v%v", pageType, s.scrapingOptions.ImageLimit, s.after, additional)
 	}
 
-	return fmt.Sprintf("https://www.reddit.com/r/%s/.json?limit=%d&after=%d",
-		sub, s.scrapingOptions.ImageLimit, s.after)
+	url := fmt.Sprintf("https://www.reddit.com/r/%v/%v.json?limit=%v&after=%v%v",
+		sub, pageType, s.scrapingOptions.ImageLimit, s.after, additional)
+
+	return url
 }
 
 // processDownloadMessage takes in a state image and err and based on the state will
