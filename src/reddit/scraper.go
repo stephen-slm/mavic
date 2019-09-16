@@ -13,21 +13,38 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/IsaccBarker/progressbar"
 	"golang.org/x/sync/semaphore"
 )
+
+// The progress bar of the downloading progress that os currently happening
+// instead of just happening update notifications.
+var progressBar = progressbar.NewOptions(1, progressbar.OptionSetRenderBlankState(true))
 
 // DownloadState is the outcome constant of the download process. Used
 // to determine the message to be generated and shown to the user.
 type DownloadState int
 
 const (
-	SUCCESS DownloadState = 1
-	SKIPPED               = 2
-	FAILED                = 3
+	DOWNLOADING DownloadState = -1
+	SUCCESS                   = 1
+	SKIPPED                   = 2
+	FAILED                    = 3
 )
 
+// updateState is used to determine how a downloading progress has occurred and on
+// what subreddit that this happened.
+type updateState struct {
+	// The image metadata that was used to download the given image, this will
+	// be used to correctly format a message that will be displayed briefly
+	// during the downloading process.
+	image Image
+	// The state that the downloading is currently in.
+	state DownloadState
+}
+
 // metadataMutex is used to limit a single go routine to write to the
-// metedata map when creating new map entries for all the different sub
+// metadata map when creating new map entries for all the different sub
 // reddits. These are later used for adding new entries for already
 // downloaded images.
 var metadataMutex sync.Mutex
@@ -58,7 +75,7 @@ type Scraper struct {
 	// THe downloaded images once download will pump a message to this channel which will
 	// log back out to the user the information they are expecting to be notified that they
 	// have been downloaded.
-	downloadedMessagePumpChannel chan string
+	downloadedMessagePumpChannel chan updateState
 }
 
 // Start is exposed and called into when a new Scraper is created, this is called
@@ -67,9 +84,39 @@ func (s Scraper) Start() {
 	go s.downloadRedditMetadata()
 	go s.downloadImages()
 
+	var downloaded, failed, skipped int
+
 	for msg := range s.downloadedMessagePumpChannel {
-		fmt.Println(msg)
+		var downloadState string
+		var addingAmount = 1
+
+		switch msg.state {
+		case DOWNLOADING:
+			downloadState = "Downloading"
+			addingAmount = 0
+			break
+		case SUCCESS:
+			downloadState = "Downloaded"
+			downloaded += 1
+			break
+		case SKIPPED:
+			downloadState = "Skipped"
+			skipped += 1
+			break
+		case FAILED:
+			downloadState = "Failed Downloading"
+			failed += 1
+			break
+		}
+
+		progressBar.Describe(fmt.Sprintf("%s Image %s from r/%s...", downloadState, msg.image.imageId, msg.image.subreddit))
+		_ = progressBar.Add(addingAmount)
 	}
+
+	progressBar.Describe(fmt.Sprintf("%v images processed. Downloaded %v, skipped %v and failed %v.",
+		progressBar.GetMax(), downloaded, skipped, failed))
+
+	_ = progressBar.Finish()
 }
 
 // NewRedditScraper creates a instance of the reddit reddit used for taking images
@@ -85,7 +132,7 @@ func NewScraper(options Options) Scraper {
 		},
 		uniqueImageIds:               map[string]map[string]bool{},
 		downloadImageChannel:         make(chan Image),
-		downloadedMessagePumpChannel: make(chan string),
+		downloadedMessagePumpChannel: make(chan updateState),
 	}
 
 	// we don't want to continue to process the data if the given page
@@ -144,13 +191,11 @@ func (s Scraper) downloadMetadata(sub string, group *sync.WaitGroup) {
 		_ = os.MkdirAll(dir, os.ModePerm)
 	}
 
+	// Update our progress bar to contain the newly updated max value.
+	// this max value will be a increase of the old value.
+	progressBar.ChangeMax(progressBar.GetMax() + len(links))
+
 	for _, image := range links {
-		// if the image id is already been downloaded (the post came up twice) or the image id that we managed
-		// to obtain was empty, then continue since we don't have anything to work with. Skipping or attempting
-		// to not download a non-existing image.
-		if strings.TrimSpace(image.imageId) == "" || s.uniqueImageIds[sub][image.imageId] {
-			continue
-		}
 
 		// reassign the sub reddit since it could be the front page and
 		// the front page folder is which we want the folder to enter into.
@@ -206,7 +251,7 @@ func (s Scraper) downloadImages() {
 // downloadImage takes in the directory, image and sync group used to
 // download a given reddit image to a given directory.
 func (s Scraper) downloadImage(outDir string, img Image) {
-	s.downloadedMessagePumpChannel <- fmt.Sprintf("Downloading %20v - /r/%-20v - %v", img.imageId, img.subreddit, img.source)
+	s.downloadedMessagePumpChannel <- updateState{img, DOWNLOADING}
 
 	// if we are just going into the root, remove everything after the last forward slash.
 	if s.scrapingOptions.RootFolderOnly {
@@ -230,7 +275,7 @@ func (s Scraper) downloadImage(outDir string, img Image) {
 	// posts.
 	imagePath := path.Join(outDir, imageId)
 	if _, fileErr := os.Stat(imagePath); !os.IsNotExist(fileErr) {
-		s.downloadedMessagePumpChannel <- processDownloadMessage(SKIPPED, img, fileErr)
+		s.downloadedMessagePumpChannel <- updateState{img, SKIPPED}
 		return
 	}
 
@@ -240,7 +285,7 @@ func (s Scraper) downloadImage(outDir string, img Image) {
 	// no reason to attempt to download the file if we don't have any where to
 	// write the file to after wards.
 	if createErr != nil {
-		s.downloadedMessagePumpChannel <- processDownloadMessage(FAILED, img, createErr)
+		s.downloadedMessagePumpChannel <- updateState{img, FAILED}
 		return
 	}
 
@@ -250,7 +295,7 @@ func (s Scraper) downloadImage(outDir string, img Image) {
 	// early return if we failed to download the given file due to a
 	// unexpected http error.
 	if httpErr != nil {
-		s.downloadedMessagePumpChannel <- processDownloadMessage(FAILED, img, httpErr)
+		s.downloadedMessagePumpChannel <- updateState{img, FAILED}
 		return
 	}
 
@@ -258,11 +303,11 @@ func (s Scraper) downloadImage(outDir string, img Image) {
 	_, ioErr := io.Copy(out, resp.Body)
 
 	if ioErr != nil {
-		s.downloadedMessagePumpChannel <- processDownloadMessage(FAILED, img, ioErr)
+		s.downloadedMessagePumpChannel <- updateState{img, FAILED}
 		return
 	}
 
-	s.downloadedMessagePumpChannel <- processDownloadMessage(SUCCESS, img, nil)
+	s.downloadedMessagePumpChannel <- updateState{img, SUCCESS}
 }
 
 // Downloads and parses the reddit json feed based on the sub reddit. Ensuring that
@@ -320,7 +365,16 @@ func parseLinksFromListings(listings Listings) []Image {
 	returnableImages := make([]Image, len(filteredList))
 
 	for k, v := range filteredList {
-		returnableImages[k] = redditChildToImage(v)
+		image := redditChildToImage(v)
+
+		// if the image id is already been downloaded (the post came up twice) or the image id that we managed
+		// to obtain was empty, then continue since we don't have anything to work with. Skipping or attempting
+		// to not download a non-existing image.
+		if strings.TrimSpace(image.imageId) == "" {
+			continue
+		}
+
+		returnableImages[k] = image
 	}
 
 	return returnableImages
@@ -351,22 +405,6 @@ func (s Scraper) determineRedditUrl(sub string) string {
 		sub, pageType, s.scrapingOptions.ImageLimit, s.after, additional)
 
 	return url
-}
-
-// processDownloadMessage takes in a state image and err and based on the state will
-// generate a response message that will be pushed into the message pump and displayed
-// back to the user, the message is about the download process of the image.
-// error can just be nil if
-func processDownloadMessage(state DownloadState, img Image, err error) string {
-	switch state {
-	case SUCCESS:
-		return fmt.Sprintf("Downloaded %21v - /r/%-20v - %v", img.imageId, img.subreddit, img.source)
-	case SKIPPED:
-		return fmt.Sprintf("Skipped (exists) %15v - /r/%-20v - %v", img.imageId, img.subreddit, img.source)
-	case FAILED:
-		return fmt.Sprintf("Failed Downloading %21v - /r/%-20v - %v - error: %v", img.imageId, img.subreddit, img.source, err)
-	}
-	return ""
 }
 
 // Close is designed to handle a defer closed on a closer. Correctly and
