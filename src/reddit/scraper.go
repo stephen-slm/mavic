@@ -84,7 +84,7 @@ func (s Scraper) Start() {
 	// setup the progress bar on start with the rendering of the blank empty state
 	// otherwise the loading bar could be displayed before the contents are being
 	// parsed.
-	progressBar = progressbar.NewOptions(1, progressbar.OptionSetRenderBlankState(true))
+	progressBar = progressbar.NewOptions(1, progressbar.OptionSetRenderBlankState(s.scrapingOptions.DisplayLoading))
 
 	go s.downloadRedditMetadata()
 	go s.downloadImages()
@@ -114,14 +114,18 @@ func (s Scraper) Start() {
 			break
 		}
 
-		progressBar.Describe(fmt.Sprintf("%s Image %s from r/%s...", downloadState, msg.image.imageId, msg.image.subreddit))
-		_ = progressBar.Add(addingAmount)
+		if s.scrapingOptions.DisplayLoading {
+			progressBar.Describe(fmt.Sprintf("%s Image %s from r/%s...", downloadState, msg.image.imageId, msg.image.subreddit))
+			_ = progressBar.Add(addingAmount)
+		}
 	}
 
-	progressBar.Describe(fmt.Sprintf("%v images processed. Downloaded %v, skipped %v and failed %v.",
-		progressBar.GetMax(), downloaded, skipped, failed))
+	if s.scrapingOptions.DisplayLoading {
+		progressBar.Describe(fmt.Sprintf("%v images processed. Downloaded %v, skipped %v and failed %v.",
+			progressBar.GetMax(), downloaded, skipped, failed))
 
-	_ = progressBar.Finish()
+		_ = progressBar.Finish()
+	}
 }
 
 // NewRedditScraper creates a instance of the reddit reddit used for taking images
@@ -147,13 +151,13 @@ func NewScraper(options Options) Scraper {
 		log.Fatalf("Invalid page type '%v' used, reference README for valid page types.\n", options.PageType)
 	}
 
+	if options.ImageLimit <= 0 || options.ImageLimit > 500 {
+		options.ImageLimit = 50
+	}
+
 	if options.ImageLimit > 100 {
 		fmt.Println("Option 'limit' is currently enforced to 100 or les due ot a on going problem")
 		options.ImageLimit = 100
-	}
-
-	if options.ImageLimit <= 0 || options.ImageLimit > 500 {
-		redditScraper.scrapingOptions.ImageLimit = 50
 	}
 
 	if options.FrontPage {
