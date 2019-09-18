@@ -19,7 +19,7 @@ import (
 
 // The progress bar of the downloading progress that os currently happening
 // instead of just happening update notifications.
-var progressBar = progressbar.NewOptions(1, progressbar.OptionSetRenderBlankState(true))
+var progressBar *progressbar.ProgressBar
 
 // DownloadState is the outcome constant of the download process. Used
 // to determine the message to be generated and shown to the user.
@@ -81,6 +81,11 @@ type Scraper struct {
 // Start is exposed and called into when a new Scraper is created, this is called
 // when the cli commands are parsed and the application is ready to start.
 func (s Scraper) Start() {
+	// setup the progress bar on start with the rendering of the blank empty state
+	// otherwise the loading bar could be displayed before the contents are being
+	// parsed.
+	progressBar = progressbar.NewOptions(1, progressbar.OptionSetRenderBlankState(true))
+
 	go s.downloadRedditMetadata()
 	go s.downloadImages()
 
