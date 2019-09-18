@@ -97,8 +97,8 @@ func start(c *cli.Context) error {
 	// if it equals nil, and no sub reddits was given, then just set them
 	// as s empty slice, letting the scraper handle the empty case as
 	// it should.
-	if options.Subreddits == nil {
-		options.Subreddits = []string{}
+	if options.Subreddits == nil || len(options.Subreddits) == 0 {
+		log.Fatalf("no subreddits where provided, reference %v.exe --help for more information.\n", strings.ToLower(c.App.Name))
 	}
 
 	// create a new reddit scraper and process through all the sub reddits
