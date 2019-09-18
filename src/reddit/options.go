@@ -22,4 +22,7 @@ type Options struct {
 	// a limit that has to be set because we could end up hitting rate limiting hits on sites
 	// that are allowing us to download the images directly.
 	MaxConcurrentDownloads int
+	// If the loading progress bar should be displayed or not. Simply used for headless progressing
+	// or testing that helps with minimising the amount of output that is generated to the console.
+	DisplayLoading bool
 }
