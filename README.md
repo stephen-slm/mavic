@@ -89,7 +89,7 @@ If no type is selected then the process will default to "hot".
 
 # Releases
 
-Release information can be found here: https://github.com/tehstun/Mavic/releases
+Release information can be found here: https://github.com/MambaSoftware/Mavic/releases
 
 # License
 
