@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tehstun/mavic/src/reddit"
+	"github.com/mambadev/mavic/src/reddit"
 	"gopkg.in/urfave/cli.v2"
 )
 
@@ -60,6 +60,13 @@ func setupApplicationFlags() {
 			Usage:       "The number of images that can be downloaded at the same time.",
 			Value:       25,
 			Destination: &options.MaxConcurrentDownloads,
+		},
+		&cli.BoolFlag{
+			Name:        "progressBar",
+			Aliases:     []string{"p"},
+			Usage:       "If the progress bar should be displayed or not.",
+			Value:       false,
+			Destination: &options.DisplayLoading,
 		},
 	}
 }
