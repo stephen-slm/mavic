@@ -1,5 +1,7 @@
-# note: call scripts from /scripts
-#
-
+.PHONY: build
 build:
-	go build -o mavic ./cmd/mavic/main.go
+	go build -o bin/mavic ./cmd/mavic/main.go 
+
+.PHONY: test
+test:
+	go test ./...
