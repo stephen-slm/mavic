@@ -1,4 +1,4 @@
-package reddit
+package scraper
 
 type Options struct {
 	//  The directory in which we will be downloading all the images into, based on the folder name
