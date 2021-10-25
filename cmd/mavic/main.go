@@ -5,12 +5,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mambadev/mavic/src/reddit"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/mambadev/mavic/internal/scraper"
+	"github.com/urfave/cli/v2"
 )
 
 var app = &cli.App{}
-var options = reddit.Options{}
+var options = scraper.Options{}
 
 func setupApplicationInformation() {
 	app.Name = "Mavic"
@@ -110,7 +110,7 @@ func start(c *cli.Context) error {
 
 	// create a new reddit scraper and process through all the sub reddits
 	// downloading the images in the output folder / sub reddit / image.
-	scraper := reddit.NewScraper(options)
+	scraper := scraper.NewScraper(options)
 	scraper.Start()
 	return nil
 }

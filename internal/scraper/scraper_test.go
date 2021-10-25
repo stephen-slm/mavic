@@ -1,4 +1,4 @@
-package reddit
+package scraper
 
 import (
 	"io/ioutil"

@@ -1,4 +1,4 @@
-package reddit
+package scraper
 
 import (
 	"context"
@@ -13,7 +13,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/IsaccBarker/progressbar"
+	"github.com/mambadev/mavic/internal/reddit"
+	"github.com/schollz/progressbar/v3"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -38,7 +39,7 @@ type updateState struct {
 	// The image metadata that was used to download the given image, this will
 	// be used to correctly format a message that will be displayed briefly
 	// during the downloading process.
-	image Image
+	image reddit.Image
 	// The state that the downloading is currently in.
 	state DownloadState
 }
@@ -71,7 +72,7 @@ type Scraper struct {
 	// The download image which will be designed to take in a pump of images, the listener
 	// will then fan out the images to many different go routines to downloadRedditMetadata all the images
 	// in need of downloading.
-	downloadImageChannel chan Image
+	downloadImageChannel chan reddit.Image
 	// THe downloaded images once download will pump a message to this channel which will
 	// log back out to the user the information they are expecting to be notified that they
 	// have been downloaded.
@@ -115,7 +116,7 @@ func (s Scraper) Start() {
 		}
 
 		if s.scrapingOptions.DisplayLoading {
-			progressBar.Describe(fmt.Sprintf("%s Image %s from r/%s...", downloadState, msg.image.imageId, msg.image.subreddit))
+			progressBar.Describe(fmt.Sprintf("%s Image %s from r/%s...", downloadState, msg.image.ImageId, msg.image.Subreddit))
 			_ = progressBar.Add(addingAmount)
 		}
 	}
@@ -140,7 +141,7 @@ func NewScraper(options Options) Scraper {
 			"controversial-year": true, "controversial-all": true, "controversial": true,
 		},
 		uniqueImageIds:               map[string]map[string]bool{},
-		downloadImageChannel:         make(chan Image),
+		downloadImageChannel:         make(chan reddit.Image),
 		downloadedMessagePumpChannel: make(chan updateState),
 	}
 
@@ -208,9 +209,9 @@ func (s Scraper) downloadMetadata(sub string, group *sync.WaitGroup) {
 
 		// reassign the sub reddit since it could be the front page and
 		// the front page folder is which we want the folder to enter into.
-		image.subreddit = sub
+		image.Subreddit = sub
 
-		s.uniqueImageIds[sub][image.imageId] = true
+		s.uniqueImageIds[sub][image.ImageId] = true
 		s.downloadImageChannel <- image
 	}
 }
@@ -246,8 +247,8 @@ func (s Scraper) downloadImages() {
 			fmt.Printf("Failed to acquire semaphore: %v\n", err)
 		}
 
-		go func(img Image) {
-			s.downloadImage(path.Join(s.scrapingOptions.OutputDirectory, img.subreddit), img)
+		go func(img reddit.Image) {
+			s.downloadImage(path.Join(s.scrapingOptions.OutputDirectory, img.Subreddit), img)
 			sem.Release(1)
 			waitGroup.Done()
 		}(img)
@@ -259,24 +260,24 @@ func (s Scraper) downloadImages() {
 
 // downloadImage takes in the directory, image and sync group used to
 // download a given reddit image to a given directory.
-func (s Scraper) downloadImage(outDir string, img Image) {
+func (s Scraper) downloadImage(outDir string, img reddit.Image) {
 	s.downloadedMessagePumpChannel <- updateState{img, DOWNLOADING}
 
 	// if we are just going into the root, remove everything after the last forward slash.
 	if s.scrapingOptions.RootFolderOnly {
-		outDir = strings.Replace(outDir, img.subreddit, "", 1)
+		outDir = strings.Replace(outDir, img.Subreddit, "", 1)
 	}
 
 	// replace gif-v with mp4 for a preferred download as a gif-v file does not work really well on windows
 	// machines but require additional processing. While mp4s work fine.
-	if strings.HasSuffix(img.link, "gifv") {
-		img.link = img.link[:len(img.link)-4] + "mp4"
+	if strings.HasSuffix(img.Link, "gifv") {
+		img.Link = img.Link[:len(img.Link)-4] + "mp4"
 	}
 
 	// the img id again but this time containing the file type,
 	// which allows us to determine the file type without having
 	// to do any fancy work.
-	imageIdSplit := strings.Split(img.link, "/")
+	imageIdSplit := strings.Split(img.Link, "/")
 	imageId := imageIdSplit[len(imageIdSplit)-1]
 
 	// returning early if the file already exists, ensuring another check before we go and
@@ -299,7 +300,7 @@ func (s Scraper) downloadImage(outDir string, img Image) {
 	}
 
 	defer Close(out)
-	resp, httpErr := http.Get(img.link)
+	resp, httpErr := http.Get(img.Link)
 
 	// early return if we failed to download the given file due to a
 	// unexpected http error.
@@ -322,9 +323,9 @@ func (s Scraper) downloadImage(outDir string, img Image) {
 // Downloads and parses the reddit json feed based on the sub reddit. Ensuring that
 // the sub reddit is not empty and ensuring that we send a valid user-agent to ensure
 // that reddit does not rate limit us
-func (s Scraper) gatherRedditFeed(sub string) (Listings, error) {
+func (s Scraper) gatherRedditFeed(sub string) (reddit.Listings, error) {
 	if strings.TrimSpace(sub) == "" {
-		return Listings{}, errors.New("sub reddit is required for downloading")
+		return reddit.Listings{}, errors.New("sub reddit is required for downloading")
 	}
 
 	client := &http.Client{}
@@ -340,20 +341,20 @@ func (s Scraper) gatherRedditFeed(sub string) (Listings, error) {
 	defer Close(resp.Body)
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	return UnmarshalListing(body)
+	return reddit.UnmarshalListing(body)
 }
 
 // parseLinksFromListings parses all the links and core information out from
 // the listings into a more usable formatted listings to allow for a simpler
 // image downloading downloadRedditMetadata.
-func parseLinksFromListings(listings Listings) []Image {
+func parseLinksFromListings(listings reddit.Listings) []reddit.Image {
 	if listings.Data == nil || len(listings.Data.Children) == 0 {
-		return []Image{}
+		return []reddit.Image{}
 	}
 
 	// the filtered list of all domains of imgur or that the given post hint
 	// states that the given message could be a image.
-	var filteredList []Child
+	var filteredList []reddit.Child
 
 	for _, value := range listings.Data.Children {
 		if (value.Data.Domain != nil && strings.Contains(*value.Data.Domain, "imgur")) ||
@@ -371,15 +372,15 @@ func parseLinksFromListings(listings Listings) []Image {
 
 	// preallocate the direct size required to downloadRedditMetadata all the images, since there is no need to let
 	// the underling array double constantly when we already know the size required to downloadRedditMetadata.
-	returnableImages := make([]Image, len(filteredList))
+	returnableImages := make([]reddit.Image, len(filteredList))
 
 	for k, v := range filteredList {
-		image := redditChildToImage(v)
+		image := reddit.RedditChildToImage(v)
 
 		// if the image id is already been downloaded (the post came up twice) or the image id that we managed
 		// to obtain was empty, then continue since we don't have anything to work with. Skipping or attempting
 		// to not download a non-existing image.
-		if strings.TrimSpace(image.imageId) == "" {
+		if strings.TrimSpace(image.ImageId) == "" {
 			continue
 		}
 

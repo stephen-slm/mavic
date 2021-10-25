@@ -34,15 +34,15 @@ func TestRedditChildToImage(t *testing.T) {
 		Subreddit: &subreddit,
 	}}
 
-	image := redditChildToImage(child)
+	image := RedditChildToImage(child)
 
-	assert.Equal(t, image.id, id)
-	assert.Equal(t, image.imageId, strings.Split(strings.Split(url, "/")[3], ".")[0])
-	assert.Equal(t, image.postLink, permalink)
-	assert.Equal(t, image.link, url)
-	assert.Equal(t, image.title, title)
-	assert.Equal(t, image.subreddit, subreddit)
-	assert.Equal(t, image.source, domain)
-	assert.Equal(t, image.author.name, author)
-	assert.Equal(t, image.author.link, authorMerge)
+	assert.Equal(t, image.Id, id)
+	assert.Equal(t, image.ImageId, strings.Split(strings.Split(url, "/")[3], ".")[0])
+	assert.Equal(t, image.PostLink, permalink)
+	assert.Equal(t, image.Link, url)
+	assert.Equal(t, image.Title, title)
+	assert.Equal(t, image.Subreddit, subreddit)
+	assert.Equal(t, image.Source, domain)
+	assert.Equal(t, image.Author.Name, author)
+	assert.Equal(t, image.Author.Link, authorMerge)
 }
