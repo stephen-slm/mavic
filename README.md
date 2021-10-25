@@ -29,7 +29,7 @@ NAME:
    Mavic - .\mavic.exe -l 100 --output ./pictures -f cute pics memes
 
 USAGE:
-   main.exe [global options] command [command options] [arguments...]
+   mavic [global options] command [command options] [arguments...]
 
 VERSION:
    0.2.0
@@ -41,7 +41,7 @@ AUTHOR:
    Stephen Lineker-Miller <slinekermiller@gmail.com>
 
 COMMANDS:
-     help, h  Shows a list of commands or help for one command
+   help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --output value, -o value           The output directory to store the images. (default: "./")
@@ -50,6 +50,7 @@ GLOBAL OPTIONS:
    --type value, -t value             What kind of page type should reddit be during the scrapping process. e.g hot, new. top. (default: "hot")
    --root, -r                         If specified, downloads the images directly into the root, not the subreddit folder. (default: false)
    --concurrentCount value, -c value  The number of images that can be downloaded at the same time. (default: 25)
+   --progressBar, -p                  If the progress bar should be displayed or not. (default: false)
    --help, -h                         show help (default: false)
    --version, -v                      print the version (default: false)
 ```
