@@ -42,7 +42,7 @@ type ChildData struct {
 
 // redditChildToImage takes in a single reddit listings child data object and converts it to a local
 // metadata object that is used to downloadRedditMetadata and download the image.
-func redditChildToImage(child Child) Image {
+func RedditChildToImage(child Child) Image {
 	// the image id is the last section of the source url, so this requires
 	// splitting on the forward slash and then taking everything after the dot
 	// of the last item and then taking that last item.
@@ -50,16 +50,16 @@ func redditChildToImage(child Child) Image {
 	imageId := strings.Split(splitUrl[len(splitUrl)-1], ".")[0]
 
 	return Image{
-		author: Author{
-			link: fmt.Sprintf("https://www.reddit.com/user/%s/", *child.Data.Author),
-			name: *child.Data.Author,
+		Author: Author{
+			Link: fmt.Sprintf("https://www.reddit.com/user/%s/", *child.Data.Author),
+			Name: *child.Data.Author,
 		},
-		id:        *child.Data.ID,
-		imageId:   imageId,
-		postLink:  *child.Data.Permalink,
-		link:      *child.Data.URL,
-		title:     *child.Data.Title,
-		subreddit: *child.Data.Subreddit,
-		source:    *child.Data.Domain,
+		Id:        *child.Data.ID,
+		ImageId:   imageId,
+		PostLink:  *child.Data.Permalink,
+		Link:      *child.Data.URL,
+		Title:     *child.Data.Title,
+		Subreddit: *child.Data.Subreddit,
+		Source:    *child.Data.Domain,
 	}
 }

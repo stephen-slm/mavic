@@ -3,28 +3,28 @@ package reddit
 // A author of a given reddit post.
 type Author struct {
 	// The name of the reddit user, commonly the reddit username.
-	name string
+	Name string
 	// The link directly to the reddit users profile page /u/username
-	link string
+	Link string
 }
 
 // Image is a given image with basic metadata about said
 // image posting on reddit.
 type Image struct {
 	// The id of the given image post.
-	id string
+	Id string
 	// The image id, the ending part of the link.
-	imageId string
+	ImageId string
 	// The author of the given post.
-	author Author
+	Author Author
 	// The source post link directory to reddit
-	postLink string
+	PostLink string
 	// The link to the source image (e.g imgur.com)
-	link string
+	Link string
 	// The title of the given post
-	title string
+	Title string
 	// The sub reddit that the image was posted too.
-	subreddit string
+	Subreddit string
 	//  The source in which the image is hosted. e.g imgur, reddit
-	source string
+	Source string
 }
