@@ -40,7 +40,7 @@ type ChildData struct {
 	Subreddit *string `json:"subreddit,omitempty"`
 }
 
-// redditChildToImage takes in a single reddit listings child data object and converts it to a local
+// RedditChildToImage takes in a single reddit listings child data object and converts it to a local
 // metadata object that is used to downloadRedditMetadata and download the image.
 func RedditChildToImage(child Child) Image {
 	// the image id is the last section of the source url, so this requires
