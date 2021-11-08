@@ -50,6 +50,11 @@ type updateState struct {
 // downloaded images.
 var metadataMutex sync.Mutex
 
+// progressBarMutex is used when changing the max value of the given
+// progress bar, but once working with multiple sub reddits, this
+// could be  hit my many items at once.
+var progressBarMutex sync.Mutex
+
 // Scraper is the type that will be containing all the configuration and
 // data used for the parsing process. Including references to already
 // downloaded ids + channels for the message and image pump.
@@ -115,18 +120,21 @@ func (s Scraper) Start() {
 			break
 		}
 
+		progressBarMutex.Lock()
 		if s.scrapingOptions.DisplayLoading {
 			progressBar.Describe(fmt.Sprintf("%s Image %s from r/%s...", downloadState, msg.image.ImageId, msg.image.Subreddit))
 			_ = progressBar.Add(addingAmount)
 		}
+		progressBarMutex.Unlock()
 	}
 
+	progressBarMutex.Lock()
 	if s.scrapingOptions.DisplayLoading {
 		progressBar.Describe(fmt.Sprintf("%v images processed. Downloaded %v, skipped %v and failed %v.",
 			progressBar.GetMax(), downloaded, skipped, failed))
-
 		_ = progressBar.Finish()
 	}
+	progressBarMutex.Unlock()
 }
 
 // NewRedditScraper creates a instance of the reddit reddit used for taking images
@@ -184,8 +192,6 @@ func (s Scraper) downloadMetadata(sub string, group *sync.WaitGroup) {
 		s.uniqueImageIds[sub] = map[string]bool{}
 	}
 
-	metadataMutex.Unlock()
-
 	listings, _ := s.gatherRedditFeed(sub)
 	links := parseLinksFromListings(listings)
 
@@ -203,7 +209,9 @@ func (s Scraper) downloadMetadata(sub string, group *sync.WaitGroup) {
 
 	// Update our progress bar to contain the newly updated max value.
 	// this max value will be a increase of the old value.
+	progressBarMutex.Lock()
 	progressBar.ChangeMax(progressBar.GetMax() + len(links))
+	progressBarMutex.Unlock()
 
 	for _, image := range links {
 
@@ -214,6 +222,8 @@ func (s Scraper) downloadMetadata(sub string, group *sync.WaitGroup) {
 		s.uniqueImageIds[sub][image.ImageId] = true
 		s.downloadImageChannel <- image
 	}
+
+	metadataMutex.Unlock()
 }
 
 // downloads all the metadata about all the different sub reddits which the user
