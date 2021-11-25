@@ -21,6 +21,7 @@ type Listings struct {
 }
 
 type ListingData struct {
+	After    *string `json:"after,omitempty"`
 	Dist     *int64  `json:"dist,omitempty"`
 	Children []Child `json:"children"`
 }

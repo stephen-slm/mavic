@@ -92,7 +92,7 @@ func (s Scraper) Start() {
 	// parsed.
 	progressBar = progressbar.NewOptions(1, progressbar.OptionSetRenderBlankState(s.scrapingOptions.DisplayLoading))
 
-	go s.downloadRedditMetadata()
+	s.downloadRedditMetadata()
 	go s.downloadImages()
 
 	var downloaded, failed, skipped int
@@ -187,10 +187,10 @@ func (s Scraper) downloadMetadata(sub string, group *sync.WaitGroup) {
 	// unique entry into he unique image list to keep track of all the already
 	// downloaded images by id.
 	metadataMutex.Lock()
-
 	if _, ok := s.uniqueImageIds[sub]; !ok {
 		s.uniqueImageIds[sub] = map[string]bool{}
 	}
+	metadataMutex.Unlock()
 
 	listings, _ := s.gatherRedditFeed(sub)
 	links := parseLinksFromListings(listings)
@@ -222,23 +222,25 @@ func (s Scraper) downloadMetadata(sub string, group *sync.WaitGroup) {
 		s.uniqueImageIds[sub][image.ImageId] = true
 		s.downloadImageChannel <- image
 	}
-
-	metadataMutex.Unlock()
 }
 
 // downloads all the metadata about all the different sub reddits which the user
 // as given to be downloaded. This is a requirement to gather the information that
 // will be used for the downloading process.
 func (s Scraper) downloadRedditMetadata() {
-	var downloadWaitGroup sync.WaitGroup
+	downloadWaitGroup := &sync.WaitGroup{}
+	downloadWaitGroup.Add(len(s.scrapingOptions.Subreddits))
 
-	for _, sub := range s.scrapingOptions.Subreddits {
-		downloadWaitGroup.Add(1)
-		go s.downloadMetadata(sub, &downloadWaitGroup)
-	}
+	go func() {
+		for _, sub := range s.scrapingOptions.Subreddits {
+			go s.downloadMetadata(sub, downloadWaitGroup)
+		}
+	}()
 
-	downloadWaitGroup.Wait()
-	close(s.downloadImageChannel)
+	go func() {
+		downloadWaitGroup.Wait()
+		close(s.downloadImageChannel)
+	}()
 }
 
 // Iterates through the download image pump channel and constantly blocks
@@ -258,9 +260,10 @@ func (s Scraper) downloadImages() {
 		}
 
 		go func(img reddit.Image) {
+			defer sem.Release(1)
+			defer waitGroup.Done()
+
 			s.downloadImage(path.Join(s.scrapingOptions.OutputDirectory, img.Subreddit), img)
-			sem.Release(1)
-			waitGroup.Done()
 		}(img)
 	}
 

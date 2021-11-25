@@ -58,7 +58,7 @@ func setupApplicationFlags() {
 			Name:        "concurrentCount",
 			Aliases:     []string{"c"},
 			Usage:       "The number of images that can be downloaded at the same time.",
-			Value:       25,
+			Value:       100,
 			Destination: &options.MaxConcurrentDownloads,
 		},
 		&cli.BoolFlag{
