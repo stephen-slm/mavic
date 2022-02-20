@@ -8,7 +8,8 @@
     </a>
 </h1>
 
-<h4 align="center">Mavic is a CLI application designed to download direct images found on selected reddit subreddits.</h4>
+<h4 align="center">Mavic is a CLI application designed to download direct images found on selected reddit
+subreddits.</h4>
 
 <p align="center">
   <a href="#how-to-use">How To Use</a> •
@@ -19,8 +20,8 @@
 # How to Use
 
 Display basic help related information about the application for when you quickly need to understand possible options.
-Its important to note that all specified sub reddits come after the specified flags. Any before the specified flags 
-will be removed (mavic.exe flags subs - mavic.exe -o ./pictures cute pics)
+Its important to note that all specified sub reddits come after the specified flags. Any before the specified flags will
+be removed (mavic.exe flags subs - mavic.exe -o ./pictures cute pics)
 
 ```
 .\mavic.exe --help
@@ -81,12 +82,11 @@ Downloading all cute and frontpage images of the hot 100 posts and ouputting to 
 
 ### Page Types
 
-Page types can be specified based on the -t or --type flag and the below options are a valid selection.
-If no type is selected then the process will default to "hot".
+Page types can be specified based on the -t or --type flag and the below options are a valid selection. If no type is
+selected then the process will default to "hot".
 
 "hot", "new", "rising", "best", "top-hour", "top-week", "top-month", "top-year", "top-all", "top", "controversial-hour",
 "controversial-week", "controversial-month", "controversial-year", "controversial-all", "controversial".
-
 
 # Releases
 
