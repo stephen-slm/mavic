@@ -18,10 +18,6 @@ type Options struct {
 	// What subreddits are going to be scrapped for downloading of sad images. If front page is
 	// parsed as true then the front page will be pushed onto the sub reddit listings.
 	Subreddits []string
-	// This is the max number of images that can be downloaded together at anyone time. This is
-	// a limit that has to be set because we could end up hitting rate limiting hits on sites
-	// that are allowing us to download the images directly.
-	MaxConcurrentDownloads int
 	// If the loading progress bar should be displayed or not. Simply used for headless progressing
 	// or testing that helps with minimising the amount of output that is generated to the console.
 	DisplayLoading bool

@@ -29,14 +29,13 @@ type ScraperTestSuite struct {
 // configuration options. All though won't do anything since its not called "start".
 func (suite *ScraperTestSuite) SetupTest() {
 	suite.baseOptions = Options{
-		OutputDirectory:        "./pictures",
-		ImageLimit:             5,
-		FrontPage:              false,
-		RootFolderOnly:         false,
-		PageType:               "hot",
-		Subreddits:             []string{"cute"},
-		MaxConcurrentDownloads: 25,
-		DisplayLoading:         false,
+		OutputDirectory: "./pictures",
+		ImageLimit:      5,
+		FrontPage:       false,
+		RootFolderOnly:  false,
+		PageType:        "hot",
+		Subreddits:      []string{"cute"},
+		DisplayLoading:  false,
 	}
 
 	// generates a temporary directory to be used throughout the
