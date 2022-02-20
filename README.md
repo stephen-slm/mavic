@@ -4,7 +4,7 @@
     </a>
     <br/>
     <a href="https://github.com/tehstun/mavic">
-      <img src="https://img.shields.io/badge/Mavic-v0.2.0-blue.svg" alt="mavic-Version">
+      <img src="https://img.shields.io/badge/Mavic-v0.2.1-blue.svg" alt="mavic-Version">
     </a>
 </h1>
 
@@ -84,7 +84,7 @@ selected then the process will default to "hot".
 
 # Releases
 
-Release information can be found here: https://github.com/MambaSoftware/Mavic/releases
+Release information can be found here: https://github.com/stephensli/mavic/releases
 
 # License
 

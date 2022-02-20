@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mambadev/mavic/internal/scraper"
+	"github.com/stephensli/mavic/internal/scraper"
 	"github.com/urfave/cli/v2"
 )
 

@@ -11,8 +11,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/mambadev/mavic/internal/reddit"
 	"github.com/schollz/progressbar/v3"
+	"github.com/stephensli/mavic/internal/reddit"
 )
 
 // The progress bar of the downloading progress that os currently happening
