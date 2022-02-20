@@ -17,7 +17,7 @@ func setupApplicationInformation() {
 	app.Description = "Mavic is a CLI application designed to download direct images found on selected reddit subreddits."
 	app.Usage = ".\\mavic.exe -l 100 --output ./pictures -f cute pics memes"
 	app.Authors = []*cli.Author{{Name: "Stephen Lineker-Miller", Email: "slinekermiller@gmail.com"}}
-	app.Version = "0.2.0"
+	app.Version = "0.2.1"
 }
 
 func setupApplicationFlags() {
