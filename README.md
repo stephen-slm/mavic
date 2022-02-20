@@ -24,16 +24,15 @@ Its important to note that all specified sub reddits come after the specified fl
 be removed (mavic.exe flags subs - mavic.exe -o ./pictures cute pics)
 
 ```
-.\mavic.exe --help
-
 NAME:
    Mavic - .\mavic.exe -l 100 --output ./pictures -f cute pics memes
 
+
 USAGE:
-   mavic [global options] command [command options] [arguments...]
+   main.exe [global options] command [command options] [arguments...]
 
 VERSION:
-   0.2.0
+   0.2.1
 
 DESCRIPTION:
    Mavic is a CLI application designed to download direct images found on selected reddit subreddits.
@@ -45,15 +44,10 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --output value, -o value           The output directory to store the images. (default: "./")
-   --limit value, -l value            The total number of posts max per sub-reddit (default: 50)
-   --frontpage, -f                    If the front page should be scrapped or not. (default: false)
-   --type value, -t value             What kind of page type should reddit be during the scrapping process. e.g hot, new. top. (default: "hot")
-   --root, -r                         If specified, downloads the images directly into the root, not the subreddit folder. (default: false)
-   --concurrentCount value, -c value  The number of images that can be downloaded at the same time. (default: 25)
-   --progressBar, -p                  If the progress bar should be displayed or not. (default: false)
-   --help, -h                         show help (default: false)
-   --version, -v                      print the version (default: false)
+   --output value, -o value  The output directory to store the images. (default: "./")
+   --limit value, -l value   The total number of posts max per sub-reddit (default: 50)
+   --frontpage, -f           If the front page should be scrapped or not. (default: false)
+   --type value, -t value    What kind of page type should reddit be during the scrapping process. e.g hot, new. top. (default: "hot")
 ```
 
 Downloading all images from the last 50 r/cute currently on hot.
